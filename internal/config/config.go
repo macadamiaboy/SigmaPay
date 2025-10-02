@@ -27,16 +27,6 @@ type Config struct {
 	} `yaml:"log"`
 }
 
-/*
-type PostgresConfig struct {
-	Username string `yaml:"username" env:"USERNAME"`
-	Password string `yaml:"password" env:"PASSWORD"`
-	Host     string `yaml:"host" env:"HOST" env-default:"localhost"`
-	Port     int    `yaml:"port" env:"PORT" env-default:"5433"`
-	DBName   string `yaml:"dbname" env:"DBNAME"`
-}
-*/
-
 func LoadDBConfigData() *Config {
 	configPath := os.Getenv("CONFIG_PATH")
 	if configPath == "" {

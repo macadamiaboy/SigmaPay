@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
-	"github.com/macadamiaboy/SigmaPay/config"
+	"github.com/macadamiaboy/SigmaPay/internal/config"
 )
 
 type Storage *sql.DB
