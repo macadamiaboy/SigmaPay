@@ -1,0 +1,14 @@
+server:
+  host: "localhost"
+  port: 8094
+  timeout: 15
+
+database:
+  username: "postgres"
+  password: "password"
+  host: "localhost"
+  port: 5433
+  dbname: "spaymanager"
+
+log:
+  level: "info"
