@@ -3,15 +3,39 @@ package postgres
 import (
 	"database/sql"
 	"fmt"
+	"log"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/macadamiaboy/SigmaPay/internal/config"
 )
 
-type Storage *sql.DB
+type DataBase struct {
+	Connection *sql.DB
+}
 
 func New() error {
-	const op = "postgres.New"
+	const env = "postgres.New"
+
+	db, err := PrepareDB()
+	if err != nil {
+		log.Fatalf("%s: failed to prepare the db: %v", env, err)
+	}
+
+	defer func() {
+		if err := db.Close(); err != nil {
+			log.Printf("Error closing database: %v", err)
+		}
+	}()
+
+	if err = InitDatabase(db.Connection); err != nil {
+		return fmt.Errorf("%s: %w", env, err)
+	}
+
+	return nil
+}
+
+func PrepareDB() (*DataBase, error) {
+	const env = "postgres.PrepareDB"
 
 	pgConfig := config.LoadDBConfigData()
 
@@ -23,15 +47,14 @@ func New() error {
 		pgConfig.Database.DBName,
 	)
 
-	db, err := sql.Open("pgx", dsn)
+	conn, err := sql.Open("pgx", dsn)
 	if err != nil {
-		return fmt.Errorf("%s: %w", op, err)
-	}
-	defer db.Close()
-
-	if err = InitDatabase(db); err != nil {
-		return fmt.Errorf("%s: %w", op, err)
+		return nil, fmt.Errorf("%s: %w", env, err)
 	}
 
-	return nil
+	return &DataBase{Connection: conn}, nil
+}
+
+func (db *DataBase) Close() error {
+	return db.Connection.Close()
 }

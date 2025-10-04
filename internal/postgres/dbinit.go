@@ -38,7 +38,7 @@ func initPricelistTable(db *sql.DB) error {
 
 	err := execStatement(db, `
 	CREATE TABLE IF NOT EXISTS pricelist(
-	    id INTEGER PRIMARY KEY,
+	    id BIGSERIAL PRIMARY KEY,
 	    type VARCHAR(20) NOT NULL,
 	    price INTEGER NOT NULL);
 	`)
@@ -58,7 +58,7 @@ func initAddressessTable(db *sql.DB) error {
 
 	err := execStatement(db, `
 	CREATE TABLE IF NOT EXISTS addresses(
-	    id INTEGER PRIMARY KEY,
+	    id BIGSERIAL PRIMARY KEY,
 	    street VARCHAR(30) NOT NULL,
 	    house INTEGER NOT NULL,
 		building INTEGER NOT NULL);
@@ -75,7 +75,7 @@ func initPositionsTable(db *sql.DB) error {
 
 	err := execStatement(db, `
 	CREATE TABLE IF NOT EXISTS positions(
-	    id INTEGER PRIMARY KEY,
+	    id BIGSERIAL PRIMARY KEY,
 	    position VARCHAR(30) NOT NULL);
 	`)
 	if err != nil {
@@ -90,7 +90,7 @@ func initEventsTable(db *sql.DB) error {
 
 	err := execStatement(db, `
 	CREATE TABLE IF NOT EXISTS events(
-	    id INTEGER PRIMARY KEY,
+	    id BIGSERIAL PRIMARY KEY,
 	    type_id INTEGER NOT NULL REFERENCES pricelist(id),
 	    address_id INTEGER NOT NULL REFERENCES addresses(id),
 		time TIME NOT NULL);
@@ -107,7 +107,7 @@ func initPlayersTable(db *sql.DB) error {
 
 	err := execStatement(db, `
 	CREATE TABLE IF NOT EXISTS players(
-	    id INTEGER PRIMARY KEY,
+	    id BIGSERIAL PRIMARY KEY,
 	    name VARCHAR(30) NOT NULL,
 		surname VARCHAR(30),
 		tg_link VARCHAR(30) NOT NULL,
@@ -136,7 +136,7 @@ func initPlayerPresenceTable(db *sql.DB) error {
 
 	err := execStatement(db, `
 	CREATE TABLE IF NOT EXISTS player_presence(
-	    id INTEGER PRIMARY KEY,
+	    id BIGSERIAL PRIMARY KEY,
 	    event_id INTEGER NOT NULL REFERENCES events(id),
 	    player_id INTEGER NOT NULL REFERENCES players(id),
 		price INTEGER NOT NULL);
