@@ -1,4 +1,4 @@
-package tablesmethods
+package tables
 
 import (
 	"database/sql"

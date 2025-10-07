@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	tablesmethods "github.com/macadamiaboy/SigmaPay/internal/postgres/tables-methods"
+	tablesmethods "github.com/macadamiaboy/SigmaPay/internal/postgres/tables"
 )
 
 type EventType struct {
@@ -51,7 +51,7 @@ func DeleteByID(db *sql.DB, id int64) error {
 }
 
 func (e *EventType) Delete(db *sql.DB) error {
-	env := "postgres.tables-methods.pricelist.DeleteByID"
+	env := "postgres.tables-methods.pricelist.Delete"
 	query := "DELETE FROM pricelist WHERE id = $1;"
 
 	return tablesmethods.DeleteByIDHelper(db, env, query, e.Id)

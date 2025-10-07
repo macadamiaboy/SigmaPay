@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/macadamiaboy/SigmaPay/internal/postgres"
-	pricelist "github.com/macadamiaboy/SigmaPay/internal/postgres/tables-methods/pricelist"
+	pricelist "github.com/macadamiaboy/SigmaPay/internal/postgres/tables/pricelist"
 )
 
 func HWorld(w http.ResponseWriter, r *http.Request) {

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	tablesmethods "github.com/macadamiaboy/SigmaPay/internal/postgres/tables-methods"
+	tablesmethods "github.com/macadamiaboy/SigmaPay/internal/postgres/tables"
 )
 
 type Address struct {
@@ -47,14 +47,14 @@ func GetByID(db *sql.DB, id int64) (*Address, error) {
 
 func DeleteByID(db *sql.DB, id int64) error {
 	env := "postgres.tables-methods.addresses.DeleteByID"
-	query := "DELETE FROM address WHERE id = $1;"
+	query := "DELETE FROM addresses WHERE id = $1;"
 
 	return tablesmethods.DeleteByIDHelper(db, env, query, id)
 }
 
 func (a *Address) Delete(db *sql.DB) error {
 	env := "postgres.tables-methods.addresses.Delete"
-	query := "DELETE FROM pricelist WHERE id = $1;"
+	query := "DELETE FROM addresses WHERE id = $1;"
 
 	return tablesmethods.DeleteByIDHelper(db, env, query, a.Id)
 }

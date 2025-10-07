@@ -91,8 +91,8 @@ func initEventsTable(db *sql.DB) error {
 	err := execStatement(db, `
 	CREATE TABLE IF NOT EXISTS events(
 	    id BIGSERIAL PRIMARY KEY,
-	    type_id INTEGER NOT NULL REFERENCES pricelist(id),
-	    address_id INTEGER NOT NULL REFERENCES addresses(id),
+	    type_id BIGINT NOT NULL REFERENCES pricelist(id),
+	    address_id BIGINT NOT NULL REFERENCES addresses(id),
 		time TIME NOT NULL);
 	`)
 	if err != nil {
@@ -112,7 +112,7 @@ func initPlayersTable(db *sql.DB) error {
 		surname VARCHAR(30),
 		tg_link VARCHAR(30) NOT NULL,
 		is_sigma BOOL,
-	    position_id INTEGER REFERENCES positions(id));
+	    position_id BIGINT REFERENCES positions(id));
 	`)
 	if err != nil {
 		return fmt.Errorf("%s: %w", env, err)
@@ -137,9 +137,8 @@ func initPlayerPresenceTable(db *sql.DB) error {
 	err := execStatement(db, `
 	CREATE TABLE IF NOT EXISTS player_presence(
 	    id BIGSERIAL PRIMARY KEY,
-	    event_id INTEGER NOT NULL REFERENCES events(id),
-	    player_id INTEGER NOT NULL REFERENCES players(id),
-		price INTEGER NOT NULL);
+	    event_id BIGINT NOT NULL REFERENCES events(id),
+	    player_id BIGINT NOT NULL REFERENCES players(id));
 	`)
 	if err != nil {
 		return fmt.Errorf("%s: %w", env, err)
