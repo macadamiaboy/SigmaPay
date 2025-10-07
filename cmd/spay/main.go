@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/macadamiaboy/SigmaPay/internal/postgres"
-	tablesmethods "github.com/macadamiaboy/SigmaPay/internal/postgres/tables-methods"
+	pricelist "github.com/macadamiaboy/SigmaPay/internal/postgres/tables-methods/pricelist"
 )
 
 func HWorld(w http.ResponseWriter, r *http.Request) {
@@ -44,7 +44,7 @@ func main() {
 		}
 	*/
 
-	newEvent, err := tablesmethods.GetByID(db.Connection, 2)
+	newEvent, err := pricelist.GetByID(db.Connection, 2)
 	if err != nil {
 		log.Println("failed to get")
 		fmt.Printf("failed to get, err: %v", err)

@@ -1,9 +1,11 @@
-package tablesmethods
+package pricelist
 
 import (
 	"database/sql"
 	"fmt"
 	"log"
+
+	tablesmethods "github.com/macadamiaboy/SigmaPay/internal/postgres/tables-methods"
 )
 
 type EventType struct {
@@ -16,7 +18,7 @@ func (e *EventType) Save(db *sql.DB) error {
 	env := "postgres.tables-methods.pricelist.Save"
 	query := "INSERT INTO pricelist(type, price) VALUES($1, $2);"
 
-	return SaveHelper(db, env, query, e.Type, e.Price)
+	return tablesmethods.SaveHelper(db, env, query, e.Type, e.Price)
 }
 
 func GetByID(db *sql.DB, id int64) (*EventType, error) {
@@ -45,12 +47,12 @@ func DeleteByID(db *sql.DB, id int64) error {
 	env := "postgres.tables-methods.pricelist.DeleteByID"
 	query := "DELETE FROM pricelist WHERE id = $1;"
 
-	return DeleteByIDHelper(db, env, query, id)
+	return tablesmethods.DeleteByIDHelper(db, env, query, id)
 }
 
 func (e *EventType) Delete(db *sql.DB) error {
 	env := "postgres.tables-methods.pricelist.DeleteByID"
 	query := "DELETE FROM pricelist WHERE id = $1;"
 
-	return DeleteByIDHelper(db, env, query, e.Id)
+	return tablesmethods.DeleteByIDHelper(db, env, query, e.Id)
 }
