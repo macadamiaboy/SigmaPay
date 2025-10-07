@@ -30,6 +30,10 @@ func InitDatabase(db *sql.DB) error {
 		return fmt.Errorf("error occured during init process: %w", err)
 	}
 
+	if err := initPaymentsTable(db); err != nil {
+		return fmt.Errorf("error occured during init process: %w", err)
+	}
+
 	return nil
 }
 
@@ -118,12 +122,12 @@ func initPlayersTable(db *sql.DB) error {
 		return fmt.Errorf("%s: %w", env, err)
 	}
 
-	err = execStatement(db, "CREATE INDEX IF NOT EXISTS idx_type ON players(tg_link);")
+	err = execStatement(db, "CREATE INDEX IF NOT EXISTS idx_telegram ON players(tg_link);")
 	if err != nil {
 		return fmt.Errorf("%s: %w", env, err)
 	}
 
-	err = execStatement(db, "CREATE INDEX IF NOT EXISTS idx_type ON players(is_sigma);")
+	err = execStatement(db, "CREATE INDEX IF NOT EXISTS idx_membership ON players(is_sigma);")
 	if err != nil {
 		return fmt.Errorf("%s: %w", env, err)
 	}
@@ -140,6 +144,33 @@ func initPlayerPresenceTable(db *sql.DB) error {
 	    event_id BIGINT NOT NULL REFERENCES events(id),
 	    player_id BIGINT NOT NULL REFERENCES players(id));
 	`)
+	if err != nil {
+		return fmt.Errorf("%s: %w", env, err)
+	}
+
+	err = execStatement(db, "CREATE INDEX IF NOT EXISTS idx_presence ON player_presence(player_id);")
+	if err != nil {
+		return fmt.Errorf("%s: %w", env, err)
+	}
+
+	return nil
+}
+
+func initPaymentsTable(db *sql.DB) error {
+	env := "dbinit.initPaymentsTable"
+
+	err := execStatement(db, `
+	CREATE TABLE IF NOT EXISTS payments(
+	    id BIGSERIAL PRIMARY KEY,
+	    player_id BIGINT NOT NULL REFERENCES players(id),
+		price INTEGER,
+		payed BOOL);
+	`)
+	if err != nil {
+		return fmt.Errorf("%s: %w", env, err)
+	}
+
+	err = execStatement(db, "CREATE INDEX IF NOT EXISTS idx_payments ON payments(player_id);")
 	if err != nil {
 		return fmt.Errorf("%s: %w", env, err)
 	}
