@@ -34,12 +34,32 @@ func main() {
 		}
 	}()
 
-	newEvent := tablesmethods.EventType{Type: "Тренировка", Price: 4500}
-	err = newEvent.Save(db.Connection)
-	if err != nil {
-		log.Printf("failed to save")
-	} else {
-		log.Printf("successfully saved")
-	}
+	/*
+		newEvent := tablesmethods.EventType{Type: "Тренировка", Price: 4500}
+		err = newEvent.Save(db.Connection)
+		if err != nil {
+			log.Println("failed to save")
+		} else {
+			log.Println("successfully saved")
+		}
+	*/
 
+	newEvent, err := tablesmethods.GetByID(db.Connection, 2)
+	if err != nil {
+		log.Println("failed to get")
+		fmt.Printf("failed to get, err: %v", err)
+	} else {
+		log.Println("successfully got")
+	}
+	fmt.Println(newEvent)
+
+	/*
+		newEvent.Delete(db.Connection)
+		if err != nil {
+			log.Println("failed to delete")
+			fmt.Printf("failed to delete, err: %v", err)
+		} else {
+			log.Println("successfully deleted")
+		}
+	*/
 }

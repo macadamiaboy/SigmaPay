@@ -19,7 +19,7 @@ func (e *EventType) Save(db *sql.DB) error {
 	return SaveHelper(db, env, query, e.Type, e.Price)
 }
 
-func (e *EventType) GetByID(db *sql.DB, id int64) (*EventType, error) {
+func GetByID(db *sql.DB, id int64) (*EventType, error) {
 	env := "postgres.tables-methods.pricelist.GetByID"
 
 	stmt, err := db.Prepare("SELECT * FROM pricelist WHERE id = $1")
@@ -41,9 +41,16 @@ func (e *EventType) GetByID(db *sql.DB, id int64) (*EventType, error) {
 	return &res, nil
 }
 
-func (e *EventType) DeleteByID(db *sql.DB, id int64) error {
+func DeleteByID(db *sql.DB, id int64) error {
 	env := "postgres.tables-methods.pricelist.DeleteByID"
 	query := "DELETE FROM pricelist WHERE id = $1;"
 
 	return DeleteByIDHelper(db, env, query, id)
+}
+
+func (e *EventType) Delete(db *sql.DB) error {
+	env := "postgres.tables-methods.pricelist.DeleteByID"
+	query := "DELETE FROM pricelist WHERE id = $1;"
+
+	return DeleteByIDHelper(db, env, query, e.Id)
 }
