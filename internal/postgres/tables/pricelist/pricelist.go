@@ -43,6 +43,34 @@ func GetByID(db *sql.DB, id int64) (*EventType, error) {
 	return &res, nil
 }
 
+func GetAll(db *sql.DB) (*[]EventType, error) {
+	env := "postgres.tables-methods.pricelist.GetAll"
+
+	rows, err := db.Query("SELECT id, type, price FROM pricelist")
+	if err != nil {
+		log.Printf("%s: failed to execute the query, err: %v", env, err)
+		return nil, fmt.Errorf("%s: failed to execute the query, err: %w", env, err)
+	}
+	defer rows.Close()
+
+	var collection []EventType
+	for rows.Next() {
+		var eventType EventType
+		if err := rows.Scan(&eventType.Id, &eventType.Type, &eventType.Price); err != nil {
+			log.Printf("%s: failed to get the eventType, err: %v", env, err)
+			return nil, fmt.Errorf("%s: failed to get the eventType, err: %w", env, err)
+		}
+		collection = append(collection, eventType)
+	}
+
+	if err = rows.Err(); err != nil {
+		log.Printf("%s: error occured with table rows, err: %v", env, err)
+		return nil, fmt.Errorf("%s: error occured with table rows, err: %w", env, err)
+	}
+
+	return &collection, nil
+}
+
 func DeleteByID(db *sql.DB, id int64) error {
 	env := "postgres.tables-methods.pricelist.DeleteByID"
 	query := "DELETE FROM pricelist WHERE id = $1;"
