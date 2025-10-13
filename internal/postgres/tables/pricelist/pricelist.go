@@ -21,7 +21,7 @@ func (e *EventType) Save(db *sql.DB) error {
 	return tablesmethods.SaveHelper(db, env, query, e.Type, e.Price)
 }
 
-func Update(db *sql.DB, event *EventType) error {
+func (e *EventType) Update(db *sql.DB) error {
 	env := "postgres.tables-methods.pricelist.Update"
 
 	stmt, err := db.Prepare("UPDATE pricelist SET type = $2, price = $3 WHERE id = $1")
@@ -30,7 +30,7 @@ func Update(db *sql.DB, event *EventType) error {
 		return fmt.Errorf("%s: failed to prepare the stmt, err: %w", env, err)
 	}
 
-	_, err = stmt.Exec(event.Id, event.Type, event.Price)
+	_, err = stmt.Exec(e.Id, e.Type, e.Price)
 	if err != nil {
 		log.Printf("%s: unmatched arguments to insert, err: %v", env, err)
 		return fmt.Errorf("%s: unmatched arguments to insert, err: %w", env, err)
@@ -87,13 +87,6 @@ func GetAll(db *sql.DB) (*[]EventType, error) {
 	}
 
 	return &collection, nil
-}
-
-func DeleteByID(db *sql.DB, id int64) error {
-	env := "postgres.tables-methods.pricelist.DeleteByID"
-	query := "DELETE FROM pricelist WHERE id = $1;"
-
-	return tablesmethods.DeleteByIDHelper(db, env, query, id)
 }
 
 func (e *EventType) Delete(db *sql.DB) error {

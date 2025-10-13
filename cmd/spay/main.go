@@ -11,6 +11,8 @@ func main() {
 	http.HandleFunc("/pricelists/all", pricelist.GetAllEventTypes)
 	http.HandleFunc("/pricelists/", pricelist.GetEventTypeByID)
 	http.HandleFunc("/pricelists/update", pricelist.PatchEventType)
+	http.HandleFunc("/pricelists/save", pricelist.SaveEvent)
+	http.HandleFunc("/pricelists/delete", pricelist.DeleteEvent)
 	log.Fatal(http.ListenAndServe(":8094", nil))
 
 	//init db
