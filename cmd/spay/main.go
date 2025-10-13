@@ -8,11 +8,11 @@ import (
 )
 
 func main() {
-	http.HandleFunc("/pricelists/all", pricelist.GetAllEventTypes)
-	http.HandleFunc("/pricelists/", pricelist.GetEventTypeByID)
-	http.HandleFunc("/pricelists/update", pricelist.PatchEventType)
-	http.HandleFunc("/pricelists/save", pricelist.SaveEvent)
-	http.HandleFunc("/pricelists/delete", pricelist.DeleteEvent)
+	http.HandleFunc("/pricelists/all", pricelist.HandlerHelper(pricelist.GetAllEventTypes))
+	http.HandleFunc("/pricelists/", pricelist.HandlerHelper(pricelist.GetEventTypeByID))
+	http.HandleFunc("/pricelists/update", pricelist.HandlerHelper(pricelist.PatchEventType))
+	http.HandleFunc("/pricelists/save", pricelist.HandlerHelper(pricelist.SaveEvent))
+	http.HandleFunc("/pricelists/delete", pricelist.HandlerHelper(pricelist.DeleteEvent))
 	log.Fatal(http.ListenAndServe(":8094", nil))
 
 	//init db

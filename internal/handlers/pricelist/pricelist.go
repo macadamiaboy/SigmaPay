@@ -1,7 +1,9 @@
 package pricelist
 
 import (
+	"database/sql"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -18,29 +20,44 @@ type Response struct {
 	Pricelists []pricelist.EventType
 }
 
-func SaveEvent(w http.ResponseWriter, r *http.Request) {
+func HandlerHelper(fn func(*RequestBody, *sql.DB) (*Response, error)) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var requestBody RequestBody
+
+		decoder := json.NewDecoder(r.Body)
+		if err := decoder.Decode(&requestBody); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		db, err := postgres.PrepareDB()
+		if err != nil {
+			log.Fatalf("failed to prepare the db: %v", err)
+		}
+
+		defer func() {
+			if err := db.Close(); err != nil {
+				log.Printf("Error closing database: %v", err)
+			}
+		}()
+
+		response, err := fn(&requestBody, db.Connection)
+		if err != nil {
+			log.Printf("Error during execution: %v", err)
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		if err = json.NewEncoder(w).Encode(response); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+}
+
+func SaveEvent(requestBody *RequestBody, db *sql.DB) (*Response, error) {
 	env := "handlers.payments.SaveEvent"
 
-	var requestBody RequestBody
-
-	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(&requestBody); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	db, err := postgres.PrepareDB()
-	if err != nil {
-		log.Fatalf("%s: failed to prepare the db: %v", env, err)
-	}
-
-	defer func() {
-		if err := db.Close(); err != nil {
-			log.Printf("Error closing database: %v", err)
-		}
-	}()
-
-	if err = requestBody.EventType.Save(db.Connection); err != nil {
+	if err := requestBody.EventType.Save(db); err != nil {
 		log.Fatalf("%s: failed to save the pricelist: %v", env, err)
 	}
 
@@ -48,37 +65,16 @@ func SaveEvent(w http.ResponseWriter, r *http.Request) {
 		Message: "New EventType saved successfully",
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	return &response, nil
 }
 
-func GetEventTypeByID(w http.ResponseWriter, r *http.Request) {
+func GetEventTypeByID(requestBody *RequestBody, db *sql.DB) (*Response, error) {
 	env := "handlers.payments.GetEventTypeByID"
+
 	var eventPrice *pricelist.EventType
 
-	var requestBody RequestBody
-
-	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(&requestBody); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	db, err := postgres.PrepareDB()
+	eventPrice, err := pricelist.GetByID(db, int64(requestBody.EventType.Id))
 	if err != nil {
-		log.Fatalf("%s: failed to prepare the db: %v", env, err)
-	}
-
-	defer func() {
-		if err := db.Close(); err != nil {
-			log.Printf("Error closing database: %v", err)
-		}
-	}()
-
-	if eventPrice, err = pricelist.GetByID(db.Connection, int64(requestBody.EventType.Id)); err != nil {
 		log.Fatalf("%s: failed to get the pricelist: %v", env, err)
 	}
 
@@ -87,71 +83,36 @@ func GetEventTypeByID(w http.ResponseWriter, r *http.Request) {
 		Pricelists: []pricelist.EventType{*eventPrice},
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	return &response, nil
 }
 
-func GetAllEventTypes(w http.ResponseWriter, r *http.Request) {
+func GetAllEventTypes(requestBody *RequestBody, db *sql.DB) (*Response, error) {
 	env := "handlers.payments.GetAllEventTypes"
+
 	var eventPrices *[]pricelist.EventType
 
-	db, err := postgres.PrepareDB()
+	eventPrices, err := pricelist.GetAll(db)
 	if err != nil {
-		log.Fatalf("%s: failed to prepare the db: %v", env, err)
-	}
-
-	defer func() {
-		if err := db.Close(); err != nil {
-			log.Printf("Error closing database: %v", err)
-		}
-	}()
-
-	if eventPrices, err = pricelist.GetAll(db.Connection); err != nil {
 		log.Fatalf("%s: failed to get the pricelist: %v", env, err)
 	}
 
 	response := Response{
-		Message:    "Got pricelist by ID successfully",
+		Message:    "Got all pricelists successfully",
 		Pricelists: *eventPrices,
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	return &response, nil
 }
 
-func PatchEventType(w http.ResponseWriter, r *http.Request) {
+func PatchEventType(requestBody *RequestBody, db *sql.DB) (*Response, error) {
 	env := "handlers.payments.PostEventType"
-
-	var requestBody RequestBody
-
-	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(&requestBody); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	db, err := postgres.PrepareDB()
-	if err != nil {
-		log.Fatalf("%s: failed to prepare the db: %v", env, err)
-	}
-
-	defer func() {
-		if err := db.Close(); err != nil {
-			log.Printf("Error closing database: %v", err)
-		}
-	}()
 
 	updatedEvent := requestBody.EventType
 
-	if event, err := pricelist.GetByID(db.Connection, int64(updatedEvent.Id)); err != nil {
+	if event, err := pricelist.GetByID(db, int64(updatedEvent.Id)); err != nil {
 		log.Println(err)
-		http.Error(w, "Event not found", http.StatusNotFound)
+		return nil, fmt.Errorf("not found")
+		//http.Error(w, "Event not found", http.StatusNotFound)
 	} else {
 		if updatedEvent.Type == "" {
 			updatedEvent.Type = event.Type
@@ -161,7 +122,7 @@ func PatchEventType(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if err = updatedEvent.Update(db.Connection); err != nil {
+	if err := updatedEvent.Update(db); err != nil {
 		log.Fatalf("%s: failed to update the pricelist: %v", env, err)
 	}
 
@@ -169,42 +130,20 @@ func PatchEventType(w http.ResponseWriter, r *http.Request) {
 		Message: "Updated pricelist successfully",
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	return &response, nil
 }
 
-func DeleteEvent(w http.ResponseWriter, r *http.Request) {
+func DeleteEvent(requestBody *RequestBody, db *sql.DB) (*Response, error) {
 	env := "handlers.payments.DeleteEvent"
 
-	var requestBody RequestBody
-
-	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(&requestBody); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	db, err := postgres.PrepareDB()
-	if err != nil {
-		log.Fatalf("%s: failed to prepare the db: %v", env, err)
-	}
-
-	defer func() {
-		if err := db.Close(); err != nil {
-			log.Printf("Error closing database: %v", err)
-		}
-	}()
-
-	event, err := pricelist.GetByID(db.Connection, int64(requestBody.EventType.Id))
+	event, err := pricelist.GetByID(db, int64(requestBody.EventType.Id))
 	if err != nil {
 		log.Println(err)
-		http.Error(w, "Event not found", http.StatusNotFound)
+		return nil, fmt.Errorf("not found")
+		//http.Error(w, "Event not found", http.StatusNotFound)
 	}
 
-	if err = event.Delete(db.Connection); err != nil {
+	if err = event.Delete(db); err != nil {
 		log.Fatalf("%s: failed to save the pricelist: %v", env, err)
 	}
 
@@ -212,9 +151,5 @@ func DeleteEvent(w http.ResponseWriter, r *http.Request) {
 		Message: "EventType record deleted successfully",
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	return &response, nil
 }
