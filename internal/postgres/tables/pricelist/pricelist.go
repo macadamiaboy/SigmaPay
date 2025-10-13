@@ -9,9 +9,9 @@ import (
 )
 
 type EventType struct {
-	Id    int64
-	Type  string
-	Price int
+	Id    int64  `json:"id"`
+	Type  string `json:"type"`
+	Price int    `json:"price"`
 }
 
 func (e *EventType) Save(db *sql.DB) error {
@@ -19,6 +19,24 @@ func (e *EventType) Save(db *sql.DB) error {
 	query := "INSERT INTO pricelist(type, price) VALUES($1, $2);"
 
 	return tablesmethods.SaveHelper(db, env, query, e.Type, e.Price)
+}
+
+func Update(db *sql.DB, event *EventType) error {
+	env := "postgres.tables-methods.pricelist.Update"
+
+	stmt, err := db.Prepare("UPDATE pricelist SET type = $2, price = $3 WHERE id = $1")
+	if err != nil {
+		log.Printf("%s: failed to prepare the stmt, err: %v", env, err)
+		return fmt.Errorf("%s: failed to prepare the stmt, err: %w", env, err)
+	}
+
+	_, err = stmt.Exec(event.Id, event.Type, event.Price)
+	if err != nil {
+		log.Printf("%s: unmatched arguments to insert, err: %v", env, err)
+		return fmt.Errorf("%s: unmatched arguments to insert, err: %w", env, err)
+	}
+
+	return nil
 }
 
 func GetByID(db *sql.DB, id int64) (*EventType, error) {

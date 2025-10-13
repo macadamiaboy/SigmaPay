@@ -8,8 +8,9 @@ import (
 )
 
 func main() {
-	http.HandleFunc("/pricelists/all", pricelist.GetAllPricelists)
-	http.HandleFunc("/pricelists/", pricelist.GetPricelistByID)
+	http.HandleFunc("/pricelists/all", pricelist.GetAllEventTypes)
+	http.HandleFunc("/pricelists/", pricelist.GetEventTypeByID)
+	http.HandleFunc("/pricelists/update", pricelist.PatchEventType)
 	log.Fatal(http.ListenAndServe(":8094", nil))
 
 	//init db
