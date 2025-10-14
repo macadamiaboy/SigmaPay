@@ -18,31 +18,20 @@ func (e *EventType) Save(db *sql.DB) error {
 	env := "postgres.tables-methods.pricelist.Save"
 	query := "INSERT INTO pricelist(type, price) VALUES($1, $2);"
 
-	return tablesmethods.SaveHelper(db, env, query, e.Type, e.Price)
+	return tablesmethods.ExecHelper(db, env, query, e.Type, e.Price)
 }
 
 func (e *EventType) Update(db *sql.DB) error {
 	env := "postgres.tables-methods.pricelist.Update"
+	query := "UPDATE pricelist SET type = $2, price = $3 WHERE id = $1;"
 
-	stmt, err := db.Prepare("UPDATE pricelist SET type = $2, price = $3 WHERE id = $1")
-	if err != nil {
-		log.Printf("%s: failed to prepare the stmt, err: %v", env, err)
-		return fmt.Errorf("%s: failed to prepare the stmt, err: %w", env, err)
-	}
-
-	_, err = stmt.Exec(e.Id, e.Type, e.Price)
-	if err != nil {
-		log.Printf("%s: unmatched arguments to insert, err: %v", env, err)
-		return fmt.Errorf("%s: unmatched arguments to insert, err: %w", env, err)
-	}
-
-	return nil
+	return tablesmethods.ExecHelper(db, env, query, e.Id, e.Type, e.Price)
 }
 
 func GetByID(db *sql.DB, id int64) (*EventType, error) {
 	env := "postgres.tables-methods.pricelist.GetByID"
 
-	stmt, err := db.Prepare("SELECT * FROM pricelist WHERE id = $1")
+	stmt, err := db.Prepare("SELECT * FROM pricelist WHERE id = $1;")
 	if err != nil {
 		log.Printf("%s: failed to prepare the stmt, err: %v", env, err)
 		return nil, fmt.Errorf("%s: failed to prepare the stmt, err: %w", env, err)
@@ -64,7 +53,7 @@ func GetByID(db *sql.DB, id int64) (*EventType, error) {
 func GetAll(db *sql.DB) (*[]EventType, error) {
 	env := "postgres.tables-methods.pricelist.GetAll"
 
-	rows, err := db.Query("SELECT id, type, price FROM pricelist")
+	rows, err := db.Query("SELECT id, type, price FROM pricelist;")
 	if err != nil {
 		log.Printf("%s: failed to execute the query, err: %v", env, err)
 		return nil, fmt.Errorf("%s: failed to execute the query, err: %w", env, err)

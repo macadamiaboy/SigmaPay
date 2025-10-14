@@ -19,13 +19,20 @@ func (p *Payment) Save(db *sql.DB) error {
 	env := "postgres.tables-methods.payments.Save"
 	query := "INSERT INTO payments(player_id, price, payed) VALUES($1, $2, $3);"
 
-	return tablesmethods.SaveHelper(db, env, query, p.PlayerID, p.Price, p.Payed)
+	return tablesmethods.ExecHelper(db, env, query, p.PlayerID, p.Price, p.Payed)
+}
+
+func (p *Payment) Update(db *sql.DB) error {
+	env := "postgres.tables-methods.payments.Update"
+	query := "UPDATE payments SET player_id = $2, price = $3, payed = $4 WHERE id = $1;"
+
+	return tablesmethods.ExecHelper(db, env, query, p.Id, p.PlayerID, p.Price, p.Payed)
 }
 
 func GetByID(db *sql.DB, id int64) (*Payment, error) {
 	env := "postgres.tables-methods.payments.GetByID"
 
-	stmt, err := db.Prepare("SELECT * FROM payments WHERE id = $1")
+	stmt, err := db.Prepare("SELECT * FROM payments WHERE id = $1;")
 	if err != nil {
 		log.Printf("%s: failed to prepare the stmt, err: %v", env, err)
 		return nil, fmt.Errorf("%s: failed to prepare the stmt, err: %w", env, err)
@@ -43,13 +50,6 @@ func GetByID(db *sql.DB, id int64) (*Payment, error) {
 	var res Payment = Payment{Id: idOfPayment, PlayerID: idOfPlayer, Price: price, Payed: payed}
 
 	return &res, nil
-}
-
-func DeleteByID(db *sql.DB, id int64) error {
-	env := "postgres.tables-methods.payments.DeleteByID"
-	query := "DELETE FROM payments WHERE id = $1;"
-
-	return tablesmethods.DeleteByIDHelper(db, env, query, id)
 }
 
 func (p *Payment) Delete(db *sql.DB) error {

@@ -2,12 +2,9 @@ package pricelist
 
 import (
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"log"
-	"net/http"
 
-	"github.com/macadamiaboy/SigmaPay/internal/postgres"
 	"github.com/macadamiaboy/SigmaPay/internal/postgres/tables/pricelist"
 )
 
@@ -18,40 +15,6 @@ type RequestBody struct {
 type Response struct {
 	Message    string
 	Pricelists []pricelist.EventType
-}
-
-func HandlerHelper(fn func(*RequestBody, *sql.DB) (*Response, error)) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		var requestBody RequestBody
-
-		decoder := json.NewDecoder(r.Body)
-		if err := decoder.Decode(&requestBody); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-
-		db, err := postgres.PrepareDB()
-		if err != nil {
-			log.Fatalf("failed to prepare the db: %v", err)
-		}
-
-		defer func() {
-			if err := db.Close(); err != nil {
-				log.Printf("Error closing database: %v", err)
-			}
-		}()
-
-		response, err := fn(&requestBody, db.Connection)
-		if err != nil {
-			log.Printf("Error during execution: %v", err)
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		if err = json.NewEncoder(w).Encode(response); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-	}
 }
 
 func SaveEvent(requestBody *RequestBody, db *sql.DB) (*Response, error) {

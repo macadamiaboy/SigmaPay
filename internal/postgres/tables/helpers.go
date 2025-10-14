@@ -6,7 +6,7 @@ import (
 	"log"
 )
 
-func SaveHelper(db *sql.DB, env string, query string, structFields ...any) error {
+func ExecHelper(db *sql.DB, env string, query string, structFields ...any) error {
 	stmt, err := db.Prepare(query)
 	if err != nil {
 		log.Printf("%s: failed to prepare the stmt, err: %v", env, err)

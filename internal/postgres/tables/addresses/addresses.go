@@ -19,13 +19,20 @@ func (a *Address) Save(db *sql.DB) error {
 	env := "postgres.tables-methods.addresses.Save"
 	query := "INSERT INTO addresses(street, house, building) VALUES($1, $2, $3);"
 
-	return tablesmethods.SaveHelper(db, env, query, a.Street, a.House, a.Building)
+	return tablesmethods.ExecHelper(db, env, query, a.Street, a.House, a.Building)
+}
+
+func (a *Address) Update(db *sql.DB) error {
+	env := "postgres.tables-methods.addresses.Update"
+	query := "UPDATE addresses SET street = $2, house = $3, building = $4 WHERE id = $1;"
+
+	return tablesmethods.ExecHelper(db, env, query, a.Id, a.Street, a.House, a.Building)
 }
 
 func GetByID(db *sql.DB, id int64) (*Address, error) {
 	env := "postgres.tables-methods.addresses.GetByID"
 
-	stmt, err := db.Prepare("SELECT * FROM addresses WHERE id = $1")
+	stmt, err := db.Prepare("SELECT * FROM addresses WHERE id = $1;")
 	if err != nil {
 		log.Printf("%s: failed to prepare the stmt, err: %v", env, err)
 		return nil, fmt.Errorf("%s: failed to prepare the stmt, err: %w", env, err)
@@ -43,13 +50,6 @@ func GetByID(db *sql.DB, id int64) (*Address, error) {
 	var res Address = Address{Id: idOfAddress, Street: streetOfAddress, House: houseOfAddress, Building: buildingOfAddress}
 
 	return &res, nil
-}
-
-func DeleteByID(db *sql.DB, id int64) error {
-	env := "postgres.tables-methods.addresses.DeleteByID"
-	query := "DELETE FROM addresses WHERE id = $1;"
-
-	return tablesmethods.DeleteByIDHelper(db, env, query, id)
 }
 
 func (a *Address) Delete(db *sql.DB) error {

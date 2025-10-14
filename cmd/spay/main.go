@@ -4,15 +4,16 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/macadamiaboy/SigmaPay/internal/handlers"
 	pricelist "github.com/macadamiaboy/SigmaPay/internal/handlers/pricelist"
 )
 
 func main() {
-	http.HandleFunc("/pricelists/all", pricelist.HandlerHelper(pricelist.GetAllEventTypes))
-	http.HandleFunc("/pricelists/", pricelist.HandlerHelper(pricelist.GetEventTypeByID))
-	http.HandleFunc("/pricelists/update", pricelist.HandlerHelper(pricelist.PatchEventType))
-	http.HandleFunc("/pricelists/save", pricelist.HandlerHelper(pricelist.SaveEvent))
-	http.HandleFunc("/pricelists/delete", pricelist.HandlerHelper(pricelist.DeleteEvent))
+	http.HandleFunc("/pricelists/all", handlers.HandlerHelper(pricelist.GetAllEventTypes))
+	http.HandleFunc("/pricelists/", handlers.HandlerHelper(pricelist.GetEventTypeByID))
+	http.HandleFunc("/pricelists/update", handlers.HandlerHelper(pricelist.PatchEventType))
+	http.HandleFunc("/pricelists/save", handlers.HandlerHelper(pricelist.SaveEvent))
+	http.HandleFunc("/pricelists/delete", handlers.HandlerHelper(pricelist.DeleteEvent))
 	log.Fatal(http.ListenAndServe(":8094", nil))
 
 	//init db

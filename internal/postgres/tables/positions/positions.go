@@ -17,13 +17,20 @@ func (p *Position) Save(db *sql.DB) error {
 	env := "postgres.tables-methods.positions.Save"
 	query := "INSERT INTO positions(position) VALUES($1);"
 
-	return tablesmethods.SaveHelper(db, env, query, p.Position)
+	return tablesmethods.ExecHelper(db, env, query, p.Position)
+}
+
+func (p *Position) Update(db *sql.DB) error {
+	env := "postgres.tables-methods.positions.Update"
+	query := "UPDATE events SET position = $2 WHERE id = $1;"
+
+	return tablesmethods.ExecHelper(db, env, query, p.Id, p.Position)
 }
 
 func GetByID(db *sql.DB, id int64) (*Position, error) {
 	env := "postgres.tables-methods.positions.GetByID"
 
-	stmt, err := db.Prepare("SELECT * FROM positions WHERE id = $1")
+	stmt, err := db.Prepare("SELECT * FROM positions WHERE id = $1;")
 	if err != nil {
 		log.Printf("%s: failed to prepare the stmt, err: %v", env, err)
 		return nil, fmt.Errorf("%s: failed to prepare the stmt, err: %w", env, err)
@@ -39,13 +46,6 @@ func GetByID(db *sql.DB, id int64) (*Position, error) {
 	var res Position = Position{Id: idOfPosition, Position: position}
 
 	return &res, nil
-}
-
-func DeleteByID(db *sql.DB, id int64) error {
-	env := "postgres.tables-methods.positions.DeleteByID"
-	query := "DELETE FROM positions WHERE id = $1;"
-
-	return tablesmethods.DeleteByIDHelper(db, env, query, id)
 }
 
 func (p *Position) Delete(db *sql.DB) error {
