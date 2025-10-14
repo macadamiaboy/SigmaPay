@@ -9,11 +9,7 @@ import (
 )
 
 func main() {
-	http.HandleFunc("/pricelists/all", handlers.HandlerHelper(pricelist.GetRequestBody, handlers.GetAllHelper))
-	http.HandleFunc("/pricelists/", handlers.HandlerHelper(pricelist.GetRequestBody, handlers.GetHelper))
-	http.HandleFunc("/pricelists/save", handlers.HandlerHelper(pricelist.GetRequestBody, handlers.SaveHelper))
-	http.HandleFunc("/pricelists/delete", handlers.HandlerHelper(pricelist.GetRequestBody, handlers.DeleteHelper))
-	http.HandleFunc("/pricelists/update", handlers.HandlerHelper(pricelist.GetRequestBody, handlers.PatchHelper))
+	http.HandleFunc("/pricelists/", handlers.MainHandler(pricelist.GetRequestBody))
 	log.Fatal(http.ListenAndServe(":8094", nil))
 
 	//init db
