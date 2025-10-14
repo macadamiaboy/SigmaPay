@@ -79,11 +79,11 @@ func SaveHelper(requestBody CRUD, db *sql.DB) (*Response, error) {
 	env := "handlers.helpers.SaveHelper"
 
 	if err := requestBody.Save(db); err != nil {
-		log.Fatalf("%s: failed to save the pricelist: %v", env, err)
+		log.Fatalf("%s: failed to save the record: %v", env, err)
 	}
 
 	response := Response{
-		Message: "New EventType saved successfully",
+		Message: "New record saved successfully",
 	}
 
 	return &response, nil
@@ -94,11 +94,11 @@ func GetHelper(requestBody CRUD, db *sql.DB) (*Response, error) {
 
 	eventPrice, err := requestBody.Get(db)
 	if err != nil {
-		log.Fatalf("%s: failed to get the pricelist: %v", env, err)
+		log.Fatalf("%s: failed to get the record: %v", env, err)
 	}
 
 	response := Response{
-		Message: "Got pricelist by ID successfully",
+		Message: "Got record by ID successfully",
 		Data:    &[]any{eventPrice},
 	}
 
@@ -110,11 +110,11 @@ func GetAllHelper(requestBody CRUD, db *sql.DB) (*Response, error) {
 
 	eventPrices, err := requestBody.GetAll(db)
 	if err != nil {
-		log.Fatalf("%s: failed to get the pricelist: %v", env, err)
+		log.Fatalf("%s: failed to get the record: %v", env, err)
 	}
 
 	response := Response{
-		Message: "Got all pricelists successfully",
+		Message: "Got all records successfully",
 		Data:    eventPrices,
 	}
 
@@ -133,12 +133,12 @@ func DeleteHelper(requestBody CRUD, db *sql.DB) (*Response, error) {
 
 	if et, ok := event.(CRUD); ok {
 		if err = et.Delete(db); err != nil {
-			log.Fatalf("%s: failed to save the pricelist: %v", env, err)
+			log.Fatalf("%s: failed to save the record: %v", env, err)
 		}
 	}
 
 	response := Response{
-		Message: "EventType record deleted successfully",
+		Message: "Record deleted successfully",
 	}
 
 	return &response, nil
@@ -148,11 +148,11 @@ func PatchHelper(requestBody CRUD, db *sql.DB) (*Response, error) {
 	env := "handlers.helpers.PatchHelper"
 
 	if err := requestBody.Update(db); err != nil {
-		log.Fatalf("%s: failed to update the pricelist: %v", env, err)
+		log.Fatalf("%s: failed to update the record: %v", env, err)
 	}
 
 	response := Response{
-		Message: "Updated pricelist successfully",
+		Message: "Updated record successfully",
 	}
 
 	return &response, nil

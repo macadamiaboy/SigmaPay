@@ -26,11 +26,27 @@ func (p *Payment) Update(db *sql.DB) error {
 	env := "postgres.tables-methods.payments.Update"
 	query := "UPDATE payments SET player_id = $2, price = $3, payed = $4 WHERE id = $1;"
 
+	record, err := p.Get(db)
+	if err != nil {
+		return fmt.Errorf("%s: %w", env, err)
+	}
+
+	payment, ok := record.(*Payment)
+	if ok {
+		if p.PlayerID == 0 {
+			p.PlayerID = payment.PlayerID
+		}
+		if p.Price == 0 {
+			p.Price = payment.Price
+		}
+		//payed field is not touched
+	}
+
 	return tablesmethods.ExecHelper(db, env, query, p.Id, p.PlayerID, p.Price, p.Payed)
 }
 
-func (p *Payment) Get(db *sql.DB) (*Payment, error) {
-	env := "postgres.tables-methods.payments.GetByID"
+func (p *Payment) Get(db *sql.DB) (any, error) {
+	env := "postgres.tables-methods.payments.Get"
 
 	stmt, err := db.Prepare("SELECT * FROM payments WHERE id = $1;")
 	if err != nil {
@@ -50,6 +66,34 @@ func (p *Payment) Get(db *sql.DB) (*Payment, error) {
 	var res Payment = Payment{Id: idOfPayment, PlayerID: idOfPlayer, Price: price, Payed: payed}
 
 	return &res, nil
+}
+
+func (p *Payment) GetAll(db *sql.DB) (*[]any, error) {
+	env := "postgres.tables-methods.payments.GetAll"
+
+	rows, err := db.Query("SELECT id, player_id, price, payed FROM payments;")
+	if err != nil {
+		log.Printf("%s: failed to execute the query, err: %v", env, err)
+		return nil, fmt.Errorf("%s: failed to execute the query, err: %w", env, err)
+	}
+	defer rows.Close()
+
+	var collection []any
+	for rows.Next() {
+		var payment Payment
+		if err := rows.Scan(&payment.Id, &payment.PlayerID, &payment.Price, &payment.Payed); err != nil {
+			log.Printf("%s: failed to get the payment, err: %v", env, err)
+			return nil, fmt.Errorf("%s: failed to get the payment, err: %w", env, err)
+		}
+		collection = append(collection, payment)
+	}
+
+	if err = rows.Err(); err != nil {
+		log.Printf("%s: error occured with table rows, err: %v", env, err)
+		return nil, fmt.Errorf("%s: error occured with table rows, err: %w", env, err)
+	}
+
+	return &collection, nil
 }
 
 func (p *Payment) Delete(db *sql.DB) error {
