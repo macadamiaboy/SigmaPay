@@ -3,18 +3,13 @@ package handlers
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 
 	"github.com/macadamiaboy/SigmaPay/internal/postgres"
 )
 
-// to fix these structs to make possible to work with this method everywhere
-/*
-type RequestBody struct {
-	EventType pricelist.EventType `json:"event_type"`
-}
-*/
 type CRUD interface {
 	Save(db *sql.DB) error
 	Update(db *sql.DB) error
@@ -28,7 +23,6 @@ type Response struct {
 	Data    *[]any
 }
 
-// again wrong to use structs out of pricelist package
 func HandlerHelper(bodyGetter func(*http.Request) (CRUD, error), fn func(CRUD, *sql.DB) (*Response, error)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var requestBody CRUD
@@ -61,4 +55,87 @@ func HandlerHelper(bodyGetter func(*http.Request) (CRUD, error), fn func(CRUD, *
 			return
 		}
 	}
+}
+
+func SaveHelper(requestBody CRUD, db *sql.DB) (*Response, error) {
+	env := "handlers.helpers.SaveHelper"
+
+	if err := requestBody.Save(db); err != nil {
+		log.Fatalf("%s: failed to save the pricelist: %v", env, err)
+	}
+
+	response := Response{
+		Message: "New EventType saved successfully",
+	}
+
+	return &response, nil
+}
+
+func GetHelper(requestBody CRUD, db *sql.DB) (*Response, error) {
+	env := "handlers.helpers.GetHelper"
+
+	eventPrice, err := requestBody.Get(db)
+	if err != nil {
+		log.Fatalf("%s: failed to get the pricelist: %v", env, err)
+	}
+
+	response := Response{
+		Message: "Got pricelist by ID successfully",
+		Data:    &[]any{eventPrice},
+	}
+
+	return &response, nil
+}
+
+func GetAllHelper(requestBody CRUD, db *sql.DB) (*Response, error) {
+	env := "handlers.helpers.GetAllHelper"
+
+	eventPrices, err := requestBody.GetAll(db)
+	if err != nil {
+		log.Fatalf("%s: failed to get the pricelist: %v", env, err)
+	}
+
+	response := Response{
+		Message: "Got all pricelists successfully",
+		Data:    eventPrices,
+	}
+
+	return &response, nil
+}
+
+func DeleteHelper(requestBody CRUD, db *sql.DB) (*Response, error) {
+	env := "handlers.helpers.DeleteHelper"
+
+	event, err := requestBody.Get(db)
+	if err != nil {
+		log.Println(err)
+		return nil, fmt.Errorf("not found")
+		//http.Error(w, "Event not found", http.StatusNotFound)
+	}
+
+	if et, ok := event.(CRUD); ok {
+		if err = et.Delete(db); err != nil {
+			log.Fatalf("%s: failed to save the pricelist: %v", env, err)
+		}
+	}
+
+	response := Response{
+		Message: "EventType record deleted successfully",
+	}
+
+	return &response, nil
+}
+
+func PatchHelper(requestBody CRUD, db *sql.DB) (*Response, error) {
+	env := "handlers.helpers.PatchHelper"
+
+	if err := requestBody.Update(db); err != nil {
+		log.Fatalf("%s: failed to update the pricelist: %v", env, err)
+	}
+
+	response := Response{
+		Message: "Updated pricelist successfully",
+	}
+
+	return &response, nil
 }

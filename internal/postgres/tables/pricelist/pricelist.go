@@ -25,6 +25,21 @@ func (e *EventType) Update(db *sql.DB) error {
 	env := "postgres.tables-methods.pricelist.Update"
 	query := "UPDATE pricelist SET type = $2, price = $3 WHERE id = $1;"
 
+	record, err := e.Get(db)
+	if err != nil {
+		return fmt.Errorf("%s: %w", env, err)
+	}
+
+	eventType, ok := record.(*EventType)
+	if ok {
+		if e.Type == "" {
+			e.Type = eventType.Type
+		}
+		if e.Price == 0 {
+			e.Price = eventType.Price
+		}
+	}
+
 	return tablesmethods.ExecHelper(db, env, query, e.Id, e.Type, e.Price)
 }
 
