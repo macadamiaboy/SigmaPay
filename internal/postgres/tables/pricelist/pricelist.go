@@ -28,7 +28,7 @@ func (e *EventType) Update(db *sql.DB) error {
 	return tablesmethods.ExecHelper(db, env, query, e.Id, e.Type, e.Price)
 }
 
-func GetByID(db *sql.DB, id int64) (*EventType, error) {
+func (e *EventType) Get(db *sql.DB) (*EventType, error) {
 	env := "postgres.tables-methods.pricelist.GetByID"
 
 	stmt, err := db.Prepare("SELECT * FROM pricelist WHERE id = $1;")
@@ -40,7 +40,7 @@ func GetByID(db *sql.DB, id int64) (*EventType, error) {
 	var idOfEvent int64
 	var typeOfEvent string
 	var priceOfEvent int
-	err = stmt.QueryRow(id).Scan(&idOfEvent, &typeOfEvent, &priceOfEvent)
+	err = stmt.QueryRow(e.Id).Scan(&idOfEvent, &typeOfEvent, &priceOfEvent)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", env, err)
 	}

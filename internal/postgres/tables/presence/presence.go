@@ -28,7 +28,7 @@ func (p *PlayerPresence) Update(db *sql.DB) error {
 	return tablesmethods.ExecHelper(db, env, query, p.Id, p.EventID, p.PlayerID)
 }
 
-func GetByID(db *sql.DB, id int64) (*PlayerPresence, error) {
+func (p *PlayerPresence) Get(db *sql.DB) (*PlayerPresence, error) {
 	env := "postgres.tables-methods.presence.GetByID"
 
 	stmt, err := db.Prepare("SELECT * FROM player_presence WHERE id = $1;")
@@ -40,7 +40,7 @@ func GetByID(db *sql.DB, id int64) (*PlayerPresence, error) {
 	var idOfPresence int64
 	var idOfEvent int64
 	var idOfPlayer int64
-	err = stmt.QueryRow(id).Scan(&idOfPresence, &idOfEvent, &idOfPlayer)
+	err = stmt.QueryRow(p.Id).Scan(&idOfPresence, &idOfEvent, &idOfPlayer)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", env, err)
 	}

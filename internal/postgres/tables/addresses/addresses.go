@@ -29,7 +29,7 @@ func (a *Address) Update(db *sql.DB) error {
 	return tablesmethods.ExecHelper(db, env, query, a.Id, a.Street, a.House, a.Building)
 }
 
-func GetByID(db *sql.DB, id int64) (*Address, error) {
+func (a *Address) Get(db *sql.DB) (*Address, error) {
 	env := "postgres.tables-methods.addresses.GetByID"
 
 	stmt, err := db.Prepare("SELECT * FROM addresses WHERE id = $1;")
@@ -42,7 +42,7 @@ func GetByID(db *sql.DB, id int64) (*Address, error) {
 	var streetOfAddress string
 	var houseOfAddress int
 	var buildingOfAddress int
-	err = stmt.QueryRow(id).Scan(&idOfAddress, &streetOfAddress, &houseOfAddress, &buildingOfAddress)
+	err = stmt.QueryRow(a.Id).Scan(&idOfAddress, &streetOfAddress, &houseOfAddress, &buildingOfAddress)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", env, err)
 	}

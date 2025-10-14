@@ -29,7 +29,7 @@ func (p *Payment) Update(db *sql.DB) error {
 	return tablesmethods.ExecHelper(db, env, query, p.Id, p.PlayerID, p.Price, p.Payed)
 }
 
-func GetByID(db *sql.DB, id int64) (*Payment, error) {
+func (p *Payment) Get(db *sql.DB) (*Payment, error) {
 	env := "postgres.tables-methods.payments.GetByID"
 
 	stmt, err := db.Prepare("SELECT * FROM payments WHERE id = $1;")
@@ -42,7 +42,7 @@ func GetByID(db *sql.DB, id int64) (*Payment, error) {
 	var idOfPlayer int64
 	var price int
 	var payed bool
-	err = stmt.QueryRow(id).Scan(&idOfPayment, &idOfPlayer, &price, &payed)
+	err = stmt.QueryRow(p.Id).Scan(&idOfPayment, &idOfPlayer, &price, &payed)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", env, err)
 	}

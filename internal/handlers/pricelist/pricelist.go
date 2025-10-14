@@ -36,7 +36,7 @@ func GetEventTypeByID(requestBody *RequestBody, db *sql.DB) (*Response, error) {
 
 	var eventPrice *pricelist.EventType
 
-	eventPrice, err := pricelist.GetByID(db, int64(requestBody.EventType.Id))
+	eventPrice, err := requestBody.EventType.Get(db)
 	if err != nil {
 		log.Fatalf("%s: failed to get the pricelist: %v", env, err)
 	}
@@ -72,7 +72,7 @@ func PatchEventType(requestBody *RequestBody, db *sql.DB) (*Response, error) {
 
 	updatedEvent := requestBody.EventType
 
-	if event, err := pricelist.GetByID(db, int64(updatedEvent.Id)); err != nil {
+	if event, err := requestBody.EventType.Get(db); err != nil {
 		log.Println(err)
 		return nil, fmt.Errorf("not found")
 		//http.Error(w, "Event not found", http.StatusNotFound)
@@ -99,7 +99,7 @@ func PatchEventType(requestBody *RequestBody, db *sql.DB) (*Response, error) {
 func DeleteEvent(requestBody *RequestBody, db *sql.DB) (*Response, error) {
 	env := "handlers.payments.DeleteEvent"
 
-	event, err := pricelist.GetByID(db, int64(requestBody.EventType.Id))
+	event, err := requestBody.EventType.Get(db)
 	if err != nil {
 		log.Println(err)
 		return nil, fmt.Errorf("not found")

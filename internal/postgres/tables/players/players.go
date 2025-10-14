@@ -31,7 +31,7 @@ func (p *Player) Update(db *sql.DB) error {
 	return tablesmethods.ExecHelper(db, env, query, p.Id, p.Name, p.Surname, p.TgLink, p.IsSigma, p.PositionID)
 }
 
-func GetByID(db *sql.DB, id int64) (*Player, error) {
+func (p *Player) Get(db *sql.DB) (*Player, error) {
 	env := "postgres.tables-methods.players.GetByID"
 
 	stmt, err := db.Prepare("SELECT * FROM players WHERE id = $1;")
@@ -46,7 +46,7 @@ func GetByID(db *sql.DB, id int64) (*Player, error) {
 	var tgLink string
 	var isSigma bool
 	var idOfPosition int64
-	err = stmt.QueryRow(id).Scan(&idOfPlayer, &nameOfPlayer, &surnameOfPlayer, &tgLink, &isSigma, &idOfPosition)
+	err = stmt.QueryRow(p.Id).Scan(&idOfPlayer, &nameOfPlayer, &surnameOfPlayer, &tgLink, &isSigma, &idOfPosition)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", env, err)
 	}

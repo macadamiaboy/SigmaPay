@@ -30,7 +30,7 @@ func (e *Event) Update(db *sql.DB) error {
 	return tablesmethods.ExecHelper(db, env, query, e.Id, e.TypeID, e.AddressID, e.Time)
 }
 
-func GetByID(db *sql.DB, id int64) (*Event, error) {
+func (e *Event) Get(db *sql.DB) (*Event, error) {
 	env := "postgres.tables-methods.events.GetByID"
 
 	stmt, err := db.Prepare("SELECT * FROM events WHERE id = $1;")
@@ -43,7 +43,7 @@ func GetByID(db *sql.DB, id int64) (*Event, error) {
 	var idOfType int64
 	var idOfAddress int64
 	var timeOfEvent time.Time
-	err = stmt.QueryRow(id).Scan(&idOfEvent, &idOfType, &idOfAddress, &timeOfEvent)
+	err = stmt.QueryRow(e.Id).Scan(&idOfEvent, &idOfType, &idOfAddress, &timeOfEvent)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", env, err)
 	}

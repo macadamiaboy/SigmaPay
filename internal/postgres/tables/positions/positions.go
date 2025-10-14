@@ -27,7 +27,7 @@ func (p *Position) Update(db *sql.DB) error {
 	return tablesmethods.ExecHelper(db, env, query, p.Id, p.Position)
 }
 
-func GetByID(db *sql.DB, id int64) (*Position, error) {
+func (p *Position) Get(db *sql.DB) (*Position, error) {
 	env := "postgres.tables-methods.positions.GetByID"
 
 	stmt, err := db.Prepare("SELECT * FROM positions WHERE id = $1;")
@@ -38,7 +38,7 @@ func GetByID(db *sql.DB, id int64) (*Position, error) {
 
 	var idOfPosition int64
 	var position string
-	err = stmt.QueryRow(id).Scan(&idOfPosition, &position)
+	err = stmt.QueryRow(p.Id).Scan(&idOfPosition, &position)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", env, err)
 	}
