@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/macadamiaboy/SigmaPay/internal/handlers/pricelist"
 	"github.com/macadamiaboy/SigmaPay/internal/postgres"
 )
 
@@ -15,20 +14,27 @@ import (
 type RequestBody struct {
 	EventType pricelist.EventType `json:"event_type"`
 }
+*/
+type CRUD interface {
+	Save(db *sql.DB) error
+	Update(db *sql.DB) error
+	Delete(db *sql.DB) error
+	Get(db *sql.DB) (any, error)
+	GetAll(db *sql.DB) (*[]any, error)
+}
 
 type Response struct {
-	Message    string
-	Pricelists []pricelist.EventType
+	Message string
+	Data    *[]any
 }
-*/
 
 // again wrong to use structs out of pricelist package
-func HandlerHelper(fn func(*pricelist.RequestBody, *sql.DB) (any, error)) http.HandlerFunc {
+func HandlerHelper(bodyGetter func(*http.Request) (CRUD, error), fn func(CRUD, *sql.DB) (*Response, error)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var requestBody pricelist.RequestBody
+		var requestBody CRUD
 
-		decoder := json.NewDecoder(r.Body)
-		if err := decoder.Decode(&requestBody); err != nil {
+		requestBody, err := bodyGetter(r)
+		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
@@ -44,7 +50,7 @@ func HandlerHelper(fn func(*pricelist.RequestBody, *sql.DB) (any, error)) http.H
 			}
 		}()
 
-		response, err := fn(&requestBody, db.Connection)
+		response, err := fn(requestBody, db.Connection)
 		if err != nil {
 			log.Printf("Error during execution: %v", err)
 		}

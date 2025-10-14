@@ -28,7 +28,7 @@ func (e *EventType) Update(db *sql.DB) error {
 	return tablesmethods.ExecHelper(db, env, query, e.Id, e.Type, e.Price)
 }
 
-func (e *EventType) Get(db *sql.DB) (*EventType, error) {
+func (e *EventType) Get(db *sql.DB) (any, error) {
 	env := "postgres.tables-methods.pricelist.GetByID"
 
 	stmt, err := db.Prepare("SELECT * FROM pricelist WHERE id = $1;")
@@ -50,7 +50,7 @@ func (e *EventType) Get(db *sql.DB) (*EventType, error) {
 	return &res, nil
 }
 
-func GetAll(db *sql.DB) (*[]EventType, error) {
+func (e *EventType) GetAll(db *sql.DB) (*[]any, error) {
 	env := "postgres.tables-methods.pricelist.GetAll"
 
 	rows, err := db.Query("SELECT id, type, price FROM pricelist;")
@@ -60,7 +60,7 @@ func GetAll(db *sql.DB) (*[]EventType, error) {
 	}
 	defer rows.Close()
 
-	var collection []EventType
+	var collection []any
 	for rows.Next() {
 		var eventType EventType
 		if err := rows.Scan(&eventType.Id, &eventType.Type, &eventType.Price); err != nil {
