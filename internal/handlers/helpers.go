@@ -43,10 +43,12 @@ func MainHandler(bodyGetter func(*http.Request) (CRUD, error)) http.HandlerFunc 
 			fn = DeleteHelper
 		default:
 			http.Error(w, "There's no such method", http.StatusMethodNotAllowed)
+			return
 		}
 
 		requestBody, err := bodyGetter(r)
 		if err != nil {
+			log.Fatalf("failed to get the request body: %v", err)
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
@@ -54,17 +56,23 @@ func MainHandler(bodyGetter func(*http.Request) (CRUD, error)) http.HandlerFunc 
 		db, err := postgres.PrepareDB()
 		if err != nil {
 			log.Fatalf("failed to prepare the db: %v", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 
 		defer func() {
 			if err := db.Close(); err != nil {
 				log.Printf("Error closing database: %v", err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
 			}
 		}()
 
 		response, err := fn(requestBody, db.Connection)
 		if err != nil {
 			log.Printf("Error during execution: %v", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 
 		w.Header().Set("Content-Type", "application/json")
@@ -80,6 +88,7 @@ func SaveHelper(requestBody CRUD, db *sql.DB) (*Response, error) {
 
 	if err := requestBody.Save(db); err != nil {
 		log.Fatalf("%s: failed to save the record: %v", env, err)
+		return nil, fmt.Errorf("failed to save the record: %w", err)
 	}
 
 	response := Response{
@@ -95,6 +104,7 @@ func GetHelper(requestBody CRUD, db *sql.DB) (*Response, error) {
 	eventPrice, err := requestBody.Get(db)
 	if err != nil {
 		log.Fatalf("%s: failed to get the record: %v", env, err)
+		return nil, fmt.Errorf("failed to get the record: %w", err)
 	}
 
 	response := Response{
@@ -110,7 +120,8 @@ func GetAllHelper(requestBody CRUD, db *sql.DB) (*Response, error) {
 
 	eventPrices, err := requestBody.GetAll(db)
 	if err != nil {
-		log.Fatalf("%s: failed to get the record: %v", env, err)
+		log.Fatalf("%s: failed to get records: %v", env, err)
+		return nil, fmt.Errorf("failed to get records: %w", err)
 	}
 
 	response := Response{
@@ -127,13 +138,13 @@ func DeleteHelper(requestBody CRUD, db *sql.DB) (*Response, error) {
 	event, err := requestBody.Get(db)
 	if err != nil {
 		log.Println(err)
-		return nil, fmt.Errorf("not found")
-		//http.Error(w, "Event not found", http.StatusNotFound)
+		return nil, fmt.Errorf("the record is not found: %w", err)
 	}
 
 	if et, ok := event.(CRUD); ok {
 		if err = et.Delete(db); err != nil {
-			log.Fatalf("%s: failed to save the record: %v", env, err)
+			log.Fatalf("%s: failed to delete the record: %v", env, err)
+			return nil, fmt.Errorf("failed to delete the record: %w", err)
 		}
 	}
 
@@ -149,6 +160,7 @@ func PatchHelper(requestBody CRUD, db *sql.DB) (*Response, error) {
 
 	if err := requestBody.Update(db); err != nil {
 		log.Fatalf("%s: failed to update the record: %v", env, err)
+		return nil, fmt.Errorf("failed to update the record: %w", err)
 	}
 
 	response := Response{
