@@ -19,6 +19,7 @@ func New() error {
 	db, err := PrepareDB()
 	if err != nil {
 		log.Fatalf("%s: failed to prepare the db: %v", env, err)
+		return fmt.Errorf("%s: %w", env, err)
 	}
 
 	defer func() {

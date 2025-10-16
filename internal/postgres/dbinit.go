@@ -97,7 +97,7 @@ func initEventsTable(db *sql.DB) error {
 	    id BIGSERIAL PRIMARY KEY,
 	    type_id BIGINT NOT NULL REFERENCES pricelist(id),
 	    address_id BIGINT REFERENCES addresses(id),
-		datetime DATETIME NOT NULL);
+		datetime TIMESTAMP NOT NULL);
 	`)
 	if err != nil {
 		return fmt.Errorf("%s: %w", env, err)

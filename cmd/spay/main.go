@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -12,9 +13,15 @@ import (
 	"github.com/macadamiaboy/SigmaPay/internal/handlers/positions"
 	"github.com/macadamiaboy/SigmaPay/internal/handlers/presence"
 	"github.com/macadamiaboy/SigmaPay/internal/handlers/pricelist"
+	"github.com/macadamiaboy/SigmaPay/internal/postgres"
 )
 
 func main() {
+	if err := postgres.New(); err != nil {
+		fmt.Println(err)
+		log.Fatal("failed to create")
+	}
+
 	http.HandleFunc("/pricelists/", handlers.MainHandler(pricelist.GetRequestBody))
 	http.HandleFunc("/payments/", handlers.MainHandler(payments.GetRequestBody))
 	http.HandleFunc("/addresses/", handlers.MainHandler(addresses.GetRequestBody))
@@ -43,34 +50,4 @@ func main() {
 		}()
 	*/
 
-	/*
-		newEvent := tablesmethods.EventType{Type: "Тренировка", Price: 4500}
-		err = newEvent.Save(db.Connection)
-		if err != nil {
-			log.Println("failed to save")
-		} else {
-			log.Println("successfully saved")
-		}
-	*/
-
-	/*
-		newEvent, err := pricelist.GetByID(db.Connection, 2)
-		if err != nil {
-			log.Println("failed to get")
-			fmt.Printf("failed to get, err: %v", err)
-		} else {
-			log.Println("successfully got")
-		}
-		fmt.Println(newEvent)
-	*/
-
-	/*
-		newEvent.Delete(db.Connection)
-		if err != nil {
-			log.Println("failed to delete")
-			fmt.Printf("failed to delete, err: %v", err)
-		} else {
-			log.Println("successfully deleted")
-		}
-	*/
 }
