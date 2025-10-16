@@ -96,8 +96,8 @@ func initEventsTable(db *sql.DB) error {
 	CREATE TABLE IF NOT EXISTS events(
 	    id BIGSERIAL PRIMARY KEY,
 	    type_id BIGINT NOT NULL REFERENCES pricelist(id),
-	    address_id BIGINT NOT NULL REFERENCES addresses(id),
-		time TIME NOT NULL);
+	    address_id BIGINT REFERENCES addresses(id),
+		datetime DATETIME NOT NULL);
 	`)
 	if err != nil {
 		return fmt.Errorf("%s: %w", env, err)
@@ -163,6 +163,7 @@ func initPaymentsTable(db *sql.DB) error {
 	CREATE TABLE IF NOT EXISTS payments(
 	    id BIGSERIAL PRIMARY KEY,
 	    player_id BIGINT NOT NULL REFERENCES players(id),
+		event_id BIGINT NOT NULL REFERENCES events(id),
 		price INTEGER,
 		payed BOOL);
 	`)

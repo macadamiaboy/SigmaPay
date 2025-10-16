@@ -13,19 +13,19 @@ type Event struct {
 	Id        int64
 	TypeID    int64
 	AddressID int64
-	Time      time.Time
+	DateTime  time.Time
 }
 
 func (e *Event) Save(db *sql.DB) error {
 	env := "postgres.tables-methods.events.Save"
-	query := "INSERT INTO events(type_id, address_id, time) VALUES($1, $2, $3);"
+	query := "INSERT INTO events(type_id, address_id, datetime) VALUES($1, $2, $3);"
 
-	return tablesmethods.ExecHelper(db, env, query, e.TypeID, e.AddressID, e.Time)
+	return tablesmethods.ExecHelper(db, env, query, e.TypeID, e.AddressID, e.DateTime)
 }
 
 func (e *Event) Update(db *sql.DB) error {
 	env := "postgres.tables-methods.events.Update"
-	query := "UPDATE events SET type_id = $2, address_id = $3, time = $4 WHERE id = $1;"
+	query := "UPDATE events SET type_id = $2, address_id = $3, datetime = $4 WHERE id = $1;"
 
 	record, err := e.Get(db)
 	if err != nil {
@@ -40,12 +40,12 @@ func (e *Event) Update(db *sql.DB) error {
 		if e.AddressID == 0 {
 			e.AddressID = event.AddressID
 		}
-		if e.Time.IsZero() {
-			e.Time = event.Time
+		if e.DateTime.IsZero() {
+			e.DateTime = event.DateTime
 		}
 	}
 
-	return tablesmethods.ExecHelper(db, env, query, e.Id, e.TypeID, e.AddressID, e.Time)
+	return tablesmethods.ExecHelper(db, env, query, e.Id, e.TypeID, e.AddressID, e.DateTime)
 }
 
 func (e *Event) Get(db *sql.DB) (any, error) {
@@ -66,7 +66,7 @@ func (e *Event) Get(db *sql.DB) (any, error) {
 		return nil, fmt.Errorf("%s: %w", env, err)
 	}
 
-	var res Event = Event{Id: idOfEvent, TypeID: idOfType, AddressID: idOfAddress, Time: timeOfEvent}
+	var res Event = Event{Id: idOfEvent, TypeID: idOfType, AddressID: idOfAddress, DateTime: timeOfEvent}
 
 	return &res, nil
 }
@@ -74,7 +74,7 @@ func (e *Event) Get(db *sql.DB) (any, error) {
 func (e *Event) GetAll(db *sql.DB) (*[]any, error) {
 	env := "postgres.tables-methods.events.GetAll"
 
-	rows, err := db.Query("SELECT id, type_id, address_id, time FROM events;")
+	rows, err := db.Query("SELECT id, type_id, address_id, datetime FROM events;")
 	if err != nil {
 		log.Printf("%s: failed to execute the query, err: %v", env, err)
 		return nil, fmt.Errorf("%s: failed to execute the query, err: %w", env, err)
@@ -84,9 +84,9 @@ func (e *Event) GetAll(db *sql.DB) (*[]any, error) {
 	var collection []any
 	for rows.Next() {
 		var event Event
-		if err := rows.Scan(&event.Id, &event.TypeID, &event.AddressID, &event.Time); err != nil {
-			log.Printf("%s: failed to get the payment, err: %v", env, err)
-			return nil, fmt.Errorf("%s: failed to get the payment, err: %w", env, err)
+		if err := rows.Scan(&event.Id, &event.TypeID, &event.AddressID, &event.DateTime); err != nil {
+			log.Printf("%s: failed to get the event, err: %v", env, err)
+			return nil, fmt.Errorf("%s: failed to get the event, err: %w", env, err)
 		}
 		collection = append(collection, event)
 	}

@@ -25,11 +25,26 @@ func (p *PlayerPresence) Update(db *sql.DB) error {
 	env := "postgres.tables-methods.presence.Update"
 	query := "UPDATE events SET event_id = $2, player_id = $3 WHERE id = $1;"
 
+	record, err := p.Get(db)
+	if err != nil {
+		return fmt.Errorf("%s: %w", env, err)
+	}
+
+	playerPresence, ok := record.(*PlayerPresence)
+	if ok {
+		if p.EventID == 0 {
+			p.EventID = playerPresence.EventID
+		}
+		if p.PlayerID == 0 {
+			p.PlayerID = playerPresence.PlayerID
+		}
+	}
+
 	return tablesmethods.ExecHelper(db, env, query, p.Id, p.EventID, p.PlayerID)
 }
 
-func (p *PlayerPresence) Get(db *sql.DB) (*PlayerPresence, error) {
-	env := "postgres.tables-methods.presence.GetByID"
+func (p *PlayerPresence) Get(db *sql.DB) (any, error) {
+	env := "postgres.tables-methods.presence.Get"
 
 	stmt, err := db.Prepare("SELECT * FROM player_presence WHERE id = $1;")
 	if err != nil {
@@ -48,6 +63,34 @@ func (p *PlayerPresence) Get(db *sql.DB) (*PlayerPresence, error) {
 	var res PlayerPresence = PlayerPresence{Id: idOfPresence, EventID: idOfEvent, PlayerID: idOfPlayer}
 
 	return &res, nil
+}
+
+func (p *PlayerPresence) GetAll(db *sql.DB) (*[]any, error) {
+	env := "postgres.tables-methods.presence.GetAll"
+
+	rows, err := db.Query("SELECT id, event_id, player_id FROM player_presence;")
+	if err != nil {
+		log.Printf("%s: failed to execute the query, err: %v", env, err)
+		return nil, fmt.Errorf("%s: failed to execute the query, err: %w", env, err)
+	}
+	defer rows.Close()
+
+	var collection []any
+	for rows.Next() {
+		var playerPresence PlayerPresence
+		if err := rows.Scan(&playerPresence.Id, &playerPresence.EventID, &playerPresence.PlayerID); err != nil {
+			log.Printf("%s: failed to get the presence, err: %v", env, err)
+			return nil, fmt.Errorf("%s: failed to get the presence, err: %w", env, err)
+		}
+		collection = append(collection, playerPresence)
+	}
+
+	if err = rows.Err(); err != nil {
+		log.Printf("%s: error occured with table rows, err: %v", env, err)
+		return nil, fmt.Errorf("%s: error occured with table rows, err: %w", env, err)
+	}
+
+	return &collection, nil
 }
 
 func (p *PlayerPresence) Delete(db *sql.DB) error {

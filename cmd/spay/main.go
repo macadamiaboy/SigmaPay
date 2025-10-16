@@ -6,6 +6,7 @@ import (
 
 	"github.com/macadamiaboy/SigmaPay/internal/handlers"
 	"github.com/macadamiaboy/SigmaPay/internal/handlers/addresses"
+	"github.com/macadamiaboy/SigmaPay/internal/handlers/events"
 	"github.com/macadamiaboy/SigmaPay/internal/handlers/payments"
 	"github.com/macadamiaboy/SigmaPay/internal/handlers/pricelist"
 )
@@ -14,6 +15,7 @@ func main() {
 	http.HandleFunc("/pricelists/", handlers.MainHandler(pricelist.GetRequestBody))
 	http.HandleFunc("/payments/", handlers.MainHandler(payments.GetRequestBody))
 	http.HandleFunc("/addresses/", handlers.MainHandler(addresses.GetRequestBody))
+	http.HandleFunc("/events/", handlers.MainHandler(events.GetRequestBody))
 	log.Fatal(http.ListenAndServe(":8094", nil))
 
 	//init db

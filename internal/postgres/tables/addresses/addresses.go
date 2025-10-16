@@ -84,8 +84,8 @@ func (p *Address) GetAll(db *sql.DB) (*[]any, error) {
 	for rows.Next() {
 		var address Address
 		if err := rows.Scan(&address.Id, &address.Street, &address.House, &address.Building); err != nil {
-			log.Printf("%s: failed to get the payment, err: %v", env, err)
-			return nil, fmt.Errorf("%s: failed to get the payment, err: %w", env, err)
+			log.Printf("%s: failed to get the address, err: %v", env, err)
+			return nil, fmt.Errorf("%s: failed to get the address, err: %w", env, err)
 		}
 		collection = append(collection, address)
 	}
