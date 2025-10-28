@@ -9,9 +9,9 @@ import (
 )
 
 type PlayerPresence struct {
-	Id       int64
-	EventID  int64
-	PlayerID int64
+	Id       int64 `json:"id"`
+	EventID  int64 `json:"event_id"`
+	PlayerID int64 `json:"player_id"`
 }
 
 func (p *PlayerPresence) Save(db *sql.DB) error {

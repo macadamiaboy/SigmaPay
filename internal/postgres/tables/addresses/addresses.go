@@ -9,10 +9,10 @@ import (
 )
 
 type Address struct {
-	Id       int64
-	Street   string
-	House    int
-	Building int
+	Id       int64  `json:"id"`
+	Street   string `json:"street"`
+	House    int    `json:"house"`
+	Building int    `json:"building"`
 }
 
 func (a *Address) Save(db *sql.DB) error {

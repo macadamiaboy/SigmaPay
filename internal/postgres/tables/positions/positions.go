@@ -9,8 +9,8 @@ import (
 )
 
 type Position struct {
-	Id       int64
-	Position string
+	Id       int64  `json:"id"`
+	Position string `json:"position"`
 }
 
 func (p *Position) Save(db *sql.DB) error {

@@ -25,12 +25,12 @@ func main() {
 	http.HandleFunc("/pricelists/", handlers.CRUDHandler(pricelist.GetRequestBody))
 
 	http.HandleFunc("/payments/", handlers.CRUDHandler(payments.GetRequestBody))
-	http.HandleFunc("/payments/debts", payments.DebtHandler())
+	http.HandleFunc("/payments/debts", payments.DebtHandler)
 
 	http.HandleFunc("/addresses/", handlers.CRUDHandler(addresses.GetRequestBody))
 
 	http.HandleFunc("/events/", handlers.CRUDHandler(events.GetRequestBody))
-	http.HandleFunc("/events/type/", events.ByTypeHandler())
+	http.HandleFunc("/events/type/", events.ByTypeHandler)
 
 	http.HandleFunc("/players/", handlers.CRUDHandler(players.GetRequestBody))
 

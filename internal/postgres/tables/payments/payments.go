@@ -9,11 +9,11 @@ import (
 )
 
 type Payment struct {
-	Id       int64
-	PlayerID int64
-	EventID  int64
-	Price    int
-	Payed    bool
+	Id       int64 `json:"id"`
+	PlayerID int64 `json:"player_id"`
+	EventID  int64 `json:"event_id"`
+	Price    int   `json:"price"`
+	Payed    bool  `json:"payed"`
 }
 
 func (p *Payment) Save(db *sql.DB) error {

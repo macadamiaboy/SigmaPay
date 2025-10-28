@@ -9,12 +9,12 @@ import (
 )
 
 type Player struct {
-	Id         int64
-	Name       string
-	Surname    string
-	TgLink     string
-	IsSigma    bool
-	PositionID int64
+	Id         int64  `json:"id"`
+	Name       string `json:"name"`
+	Surname    string `json:"surname"`
+	TgLink     string `json:"tg_link"`
+	IsSigma    bool   `json:"is_sigma"`
+	PositionID int64  `json:"position_id"`
 }
 
 func (p *Player) Save(db *sql.DB) error {

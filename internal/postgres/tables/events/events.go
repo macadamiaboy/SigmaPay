@@ -10,10 +10,10 @@ import (
 )
 
 type Event struct {
-	Id        int64
-	TypeID    int64
-	AddressID int64
-	DateTime  time.Time
+	Id        int64     `json:"id"`
+	TypeID    int64     `json:"type_id"`
+	AddressID int64     `json:"address_id"`
+	DateTime  time.Time `json:"datetime"`
 }
 
 func (e *Event) Save(db *sql.DB) error {
@@ -101,7 +101,7 @@ func (e *Event) GetAll(db *sql.DB) (*[]any, error) {
 
 func (e *Event) getAllByType(db *sql.DB, env string, reqType string) (*[]any, error) {
 	rows, err := db.Query(`
-	SELECT id, type_id, address_id, datetime
+	SELECT e.id, e.type_id, e.address_id, e.datetime
 	FROM events e
 	LEFT JOIN pricelist p
 	ON e.type_id = p.id
