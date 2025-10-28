@@ -33,6 +33,7 @@ func main() {
 	http.HandleFunc("/events/type/", events.ByTypeHandler)
 
 	http.HandleFunc("/players/", handlers.CRUDHandler(players.GetRequestBody))
+	http.HandleFunc("/players/debts/", players.DebtHandler)
 
 	http.HandleFunc("/positions/", handlers.CRUDHandler(positions.GetRequestBody))
 

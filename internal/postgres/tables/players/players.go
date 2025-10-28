@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"time"
 
 	tablesmethods "github.com/macadamiaboy/SigmaPay/internal/postgres/tables"
 )
@@ -15,6 +16,16 @@ type Player struct {
 	TgLink     string `json:"tg_link"`
 	IsSigma    bool   `json:"is_sigma"`
 	PositionID int64  `json:"position_id"`
+}
+
+type Debt struct {
+	Id        int64
+	Name      string
+	Surname   string
+	Price     int
+	Payed     bool
+	EventType string
+	EventDate time.Time
 }
 
 func (p *Player) Save(db *sql.DB) error {
@@ -111,4 +122,104 @@ func (p *Player) Delete(db *sql.DB) error {
 	query := "DELETE FROM players WHERE id = $1;"
 
 	return tablesmethods.DeleteByIDHelper(db, env, query, p.Id)
+}
+
+func (p *Player) GetAllPlayersPayments(db *sql.DB) (*[]any, error) {
+	env := "postgres.tables-methods.players.GetAllPlayersPayments"
+
+	rows, err := db.Query(`
+	SELECT pay.id, pl.name, pl.surname, pay.price, pay.payed, et.type, ev.datetime
+	FROM players pl
+	JOIN payments pay ON pl.id = pay.player_id
+	JOIN events ev ON pay.event_id = ev.id
+	JOIN pricelist et ON ev.type_id = et.id
+	WHERE pl.id = $1;`, p.Id)
+	if err != nil {
+		log.Printf("%s: failed to execute the query, err: %v", env, err)
+		return nil, fmt.Errorf("%s: failed to execute the query, err: %w", env, err)
+	}
+	defer rows.Close()
+
+	var collection []any
+	for rows.Next() {
+		var debt Debt
+		if err := rows.Scan(&debt.Id, &debt.Name, &debt.Surname, &debt.Price, &debt.Payed, &debt.EventType, &debt.EventDate); err != nil {
+			log.Printf("%s: failed to get the player, err: %v", env, err)
+			return nil, fmt.Errorf("%s: failed to get the player, err: %w", env, err)
+		}
+		collection = append(collection, debt)
+	}
+
+	if err = rows.Err(); err != nil {
+		log.Printf("%s: error occured with table rows, err: %v", env, err)
+		return nil, fmt.Errorf("%s: error occured with table rows, err: %w", env, err)
+	}
+
+	return &collection, nil
+}
+
+func (p *Player) GetAllPlayersDebts(db *sql.DB) (*[]any, error) {
+	env := "postgres.tables-methods.players.GetAllPlayersDebts"
+
+	rows, err := db.Query(`
+	SELECT pay.id, pl.name, pl.surname, pay.price, et.type, ev.datetime
+	FROM players pl
+	JOIN payments pay ON pl.id = pay.player_id
+	JOIN events ev ON pay.event_id = ev.id
+	JOIN pricelist et ON ev.type_id = et.id
+	WHERE pay.payed = false AND pl.id = $1;`, p.Id)
+	if err != nil {
+		log.Printf("%s: failed to execute the query, err: %v", env, err)
+		return nil, fmt.Errorf("%s: failed to execute the query, err: %w", env, err)
+	}
+	defer rows.Close()
+
+	var collection []any
+	for rows.Next() {
+		var debt Debt
+		if err := rows.Scan(&debt.Id, &debt.Name, &debt.Surname, &debt.Price, &debt.EventType, &debt.EventDate); err != nil {
+			log.Printf("%s: failed to get the player, err: %v", env, err)
+			return nil, fmt.Errorf("%s: failed to get the player, err: %w", env, err)
+		}
+		collection = append(collection, debt)
+	}
+
+	if err = rows.Err(); err != nil {
+		log.Printf("%s: error occured with table rows, err: %v", env, err)
+		return nil, fmt.Errorf("%s: error occured with table rows, err: %w", env, err)
+	}
+
+	return &collection, nil
+}
+
+func (p *Player) GetTotalDebt(db *sql.DB) (*[]any, error) {
+	env := "postgres.tables-methods.players.GetTotalDebt"
+
+	rows, err := db.Query(`
+	SELECT SUM(pay.price)
+	FROM players pl
+	JOIN payments pay ON pl.id = pay.player_id
+	WHERE pay.payed = false AND pl.id = $1;`, p.Id)
+	if err != nil {
+		log.Printf("%s: failed to execute the query, err: %v", env, err)
+		return nil, fmt.Errorf("%s: failed to execute the query, err: %w", env, err)
+	}
+	defer rows.Close()
+
+	var collection []any
+	for rows.Next() {
+		var debt Debt
+		if err := rows.Scan(&debt.Price); err != nil {
+			log.Printf("%s: failed to get the player, err: %v", env, err)
+			return nil, fmt.Errorf("%s: failed to get the player, err: %w", env, err)
+		}
+		collection = append(collection, debt)
+	}
+
+	if err = rows.Err(); err != nil {
+		log.Printf("%s: error occured with table rows, err: %v", env, err)
+		return nil, fmt.Errorf("%s: error occured with table rows, err: %w", env, err)
+	}
+
+	return &collection, nil
 }

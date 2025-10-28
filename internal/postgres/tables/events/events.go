@@ -103,7 +103,7 @@ func (e *Event) getAllByType(db *sql.DB, env string, reqType string) (*[]any, er
 	rows, err := db.Query(`
 	SELECT e.id, e.type_id, e.address_id, e.datetime
 	FROM events e
-	LEFT JOIN pricelist p
+	JOIN pricelist p
 	ON e.type_id = p.id
 	WHERE p.type = $1;`, reqType)
 	if err != nil {
