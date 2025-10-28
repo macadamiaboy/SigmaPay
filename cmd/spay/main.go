@@ -22,13 +22,22 @@ func main() {
 		log.Fatal("failed to create")
 	}
 
-	http.HandleFunc("/pricelists/", handlers.MainHandler(pricelist.GetRequestBody))
-	http.HandleFunc("/payments/", handlers.MainHandler(payments.GetRequestBody))
-	http.HandleFunc("/addresses/", handlers.MainHandler(addresses.GetRequestBody))
-	http.HandleFunc("/events/", handlers.MainHandler(events.GetRequestBody))
-	http.HandleFunc("/players/", handlers.MainHandler(players.GetRequestBody))
-	http.HandleFunc("/positions/", handlers.MainHandler(positions.GetRequestBody))
-	http.HandleFunc("/presence/", handlers.MainHandler(presence.GetRequestBody))
+	http.HandleFunc("/pricelists/", handlers.CRUDHandler(pricelist.GetRequestBody))
+
+	http.HandleFunc("/payments/", handlers.CRUDHandler(payments.GetRequestBody))
+	http.HandleFunc("/payments/debts", payments.DebtHandler())
+
+	http.HandleFunc("/addresses/", handlers.CRUDHandler(addresses.GetRequestBody))
+
+	http.HandleFunc("/events/", handlers.CRUDHandler(events.GetRequestBody))
+	http.HandleFunc("/events/type/", events.ByTypeHandler())
+
+	http.HandleFunc("/players/", handlers.CRUDHandler(players.GetRequestBody))
+
+	http.HandleFunc("/positions/", handlers.CRUDHandler(positions.GetRequestBody))
+
+	http.HandleFunc("/presence/", handlers.CRUDHandler(presence.GetRequestBody))
+
 	log.Fatal(http.ListenAndServe(":8094", nil))
 
 	//init db

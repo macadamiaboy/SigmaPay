@@ -24,7 +24,7 @@ type Response struct {
 	Data    *[]any
 }
 
-func MainHandler(bodyGetter func(*http.Request) (CRUD, error)) http.HandlerFunc {
+func CRUDHandler(bodyGetter func(*http.Request) (CRUD, error)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var fn func(CRUD, *sql.DB) (*Response, error)
 
@@ -101,7 +101,7 @@ func SaveHelper(requestBody CRUD, db *sql.DB) (*Response, error) {
 func GetHelper(requestBody CRUD, db *sql.DB) (*Response, error) {
 	env := "handlers.helpers.GetHelper"
 
-	eventPrice, err := requestBody.Get(db)
+	data, err := requestBody.Get(db)
 	if err != nil {
 		log.Fatalf("%s: failed to get the record: %v", env, err)
 		return nil, fmt.Errorf("failed to get the record: %w", err)
@@ -109,7 +109,7 @@ func GetHelper(requestBody CRUD, db *sql.DB) (*Response, error) {
 
 	response := Response{
 		Message: "Got record by ID successfully",
-		Data:    &[]any{eventPrice},
+		Data:    &[]any{data},
 	}
 
 	return &response, nil
@@ -118,7 +118,7 @@ func GetHelper(requestBody CRUD, db *sql.DB) (*Response, error) {
 func GetAllHelper(requestBody CRUD, db *sql.DB) (*Response, error) {
 	env := "handlers.helpers.GetAllHelper"
 
-	eventPrices, err := requestBody.GetAll(db)
+	data, err := requestBody.GetAll(db)
 	if err != nil {
 		log.Fatalf("%s: failed to get records: %v", env, err)
 		return nil, fmt.Errorf("failed to get records: %w", err)
@@ -126,7 +126,7 @@ func GetAllHelper(requestBody CRUD, db *sql.DB) (*Response, error) {
 
 	response := Response{
 		Message: "Got all records successfully",
-		Data:    eventPrices,
+		Data:    data,
 	}
 
 	return &response, nil

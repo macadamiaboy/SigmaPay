@@ -99,6 +99,51 @@ func (e *Event) GetAll(db *sql.DB) (*[]any, error) {
 	return &collection, nil
 }
 
+func (e *Event) getAllByType(db *sql.DB, env string, reqType string) (*[]any, error) {
+	rows, err := db.Query(`
+	SELECT id, type_id, address_id, datetime
+	FROM events e
+	LEFT JOIN pricelist p
+	ON e.type_id = p.id
+	WHERE p.type = $1;`, reqType)
+	if err != nil {
+		log.Printf("%s: failed to execute the query, err: %v", env, err)
+		return nil, fmt.Errorf("%s: failed to execute the query, err: %w", env, err)
+	}
+	defer rows.Close()
+
+	var collection []any
+	for rows.Next() {
+		var event Event
+		if err := rows.Scan(&event.Id, &event.TypeID, &event.AddressID, &event.DateTime); err != nil {
+			log.Printf("%s: failed to get the event, err: %v", env, err)
+			return nil, fmt.Errorf("%s: failed to get the event, err: %w", env, err)
+		}
+		collection = append(collection, event)
+	}
+
+	if err = rows.Err(); err != nil {
+		log.Printf("%s: error occured with table rows, err: %v", env, err)
+		return nil, fmt.Errorf("%s: error occured with table rows, err: %w", env, err)
+	}
+
+	return &collection, nil
+}
+
+func (e *Event) GetAllTrainings(db *sql.DB) (*[]any, error) {
+	env := "postgres.tables-methods.events.GetAllTrainings"
+	reqType := "Тренировка"
+
+	return e.getAllByType(db, env, reqType)
+}
+
+func (e *Event) GetAllGames(db *sql.DB) (*[]any, error) {
+	env := "postgres.tables-methods.events.GetAllGames"
+	reqType := "Игра"
+
+	return e.getAllByType(db, env, reqType)
+}
+
 func (e *Event) Delete(db *sql.DB) error {
 	env := "postgres.tables-methods.events.Delete"
 	query := "DELETE FROM events WHERE id = $1;"

@@ -101,6 +101,34 @@ func (p *Payment) GetAll(db *sql.DB) (*[]any, error) {
 	return &collection, nil
 }
 
+func (p *Payment) GetNotPayed(db *sql.DB) (*[]any, error) {
+	env := "postgres.tables-methods.payments.GetNotPayed"
+
+	rows, err := db.Query("SELECT id, player_id, event_id, price, payed FROM payments WHERE payed = false;")
+	if err != nil {
+		log.Printf("%s: failed to execute the query, err: %v", env, err)
+		return nil, fmt.Errorf("%s: failed to execute the query, err: %w", env, err)
+	}
+	defer rows.Close()
+
+	var collection []any
+	for rows.Next() {
+		var payment Payment
+		if err := rows.Scan(&payment.Id, &payment.PlayerID, &payment.EventID, &payment.Price, &payment.Payed); err != nil {
+			log.Printf("%s: failed to get the payment, err: %v", env, err)
+			return nil, fmt.Errorf("%s: failed to get the payment, err: %w", env, err)
+		}
+		collection = append(collection, payment)
+	}
+
+	if err = rows.Err(); err != nil {
+		log.Printf("%s: error occured with table rows, err: %v", env, err)
+		return nil, fmt.Errorf("%s: error occured with table rows, err: %w", env, err)
+	}
+
+	return &collection, nil
+}
+
 func (p *Payment) Delete(db *sql.DB) error {
 	env := "postgres.tables-methods.payments.Delete"
 	query := "DELETE FROM payments WHERE id = $1;"
