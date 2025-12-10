@@ -9,9 +9,10 @@ import (
 
 type Config struct {
 	Server struct {
-		Host    string `yaml:"host"`
-		Port    int    `yaml:"port"`
-		Timeout int    `yaml:"timeout"`
+		Host        string `yaml:"host"`
+		Port        int    `yaml:"port"`
+		Timeout     int    `yaml:"timeout"`
+		IdleTimeout int    `yaml:"idle_timout"`
 	} `yaml:"server"`
 
 	Database struct {

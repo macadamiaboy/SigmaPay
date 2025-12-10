@@ -19,13 +19,13 @@ type Player struct {
 }
 
 type Debt struct {
-	Id        int64
-	Name      string
-	Surname   string
-	Price     int
-	Payed     bool
-	EventType string
-	EventDate time.Time
+	Id        int64     `json:"id"`
+	Name      string    `json:"name,omitempty"`
+	Surname   string    `json:"surname,omitempty"`
+	Price     int       `json:"price"`
+	Payed     bool      `json:"payed,omitempty"`
+	EventType string    `json:"event_type,omitempty"`
+	EventDate time.Time `json:"event_date,omitempty"`
 }
 
 func (p *Player) Save(db *sql.DB) error {

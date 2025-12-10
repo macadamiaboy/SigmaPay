@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strings"
 
 	"github.com/macadamiaboy/SigmaPay/internal/postgres"
 )
@@ -24,27 +23,29 @@ type Response struct {
 	Data    *[]any
 }
 
-func CRUDHandler(bodyGetter func(*http.Request) (CRUD, error)) http.HandlerFunc {
+func CRUDHandler( /*db *postgres.DataBase, */ bodyGetter func(*http.Request) (CRUD, error), fn func(CRUD, *sql.DB) (*Response, error)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var fn func(CRUD, *sql.DB) (*Response, error)
+		/*
+			var fn func(CRUD, *sql.DB) (*Response, error)
 
-		switch r.Method {
-		case http.MethodGet:
-			if strings.Contains(r.URL.Path, "/all") {
-				fn = GetAllHelper
-			} else {
-				fn = GetHelper
+			switch r.Method {
+			case http.MethodGet:
+				if strings.Contains(r.URL.Path, "/all") {
+					fn = GetAllHelper
+				} else {
+					fn = GetHelper
+				}
+			case http.MethodPost:
+				fn = SaveHelper
+			case http.MethodPatch:
+				fn = PatchHelper
+			case http.MethodDelete:
+				fn = DeleteHelper
+			default:
+				http.Error(w, "There's no such method", http.StatusMethodNotAllowed)
+				return
 			}
-		case http.MethodPost:
-			fn = SaveHelper
-		case http.MethodPatch:
-			fn = PatchHelper
-		case http.MethodDelete:
-			fn = DeleteHelper
-		default:
-			http.Error(w, "There's no such method", http.StatusMethodNotAllowed)
-			return
-		}
+		*/
 
 		requestBody, err := bodyGetter(r)
 		if err != nil {

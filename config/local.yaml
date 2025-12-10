@@ -2,6 +2,7 @@ server:
   host: "localhost"
   port: 8094
   timeout: 15
+  idle_timeout: 30
 
 database:
   username: "postgres"
