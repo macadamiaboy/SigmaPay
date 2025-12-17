@@ -10,7 +10,13 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/macadamiaboy/SigmaPay/internal/config"
 	"github.com/macadamiaboy/SigmaPay/internal/handlers"
+	"github.com/macadamiaboy/SigmaPay/internal/handlers/addresses"
+	"github.com/macadamiaboy/SigmaPay/internal/handlers/events"
+	"github.com/macadamiaboy/SigmaPay/internal/handlers/payments"
 	"github.com/macadamiaboy/SigmaPay/internal/handlers/players"
+	"github.com/macadamiaboy/SigmaPay/internal/handlers/positions"
+	"github.com/macadamiaboy/SigmaPay/internal/handlers/presence"
+	"github.com/macadamiaboy/SigmaPay/internal/handlers/pricelist"
 	"github.com/macadamiaboy/SigmaPay/internal/postgres"
 )
 
@@ -19,27 +25,6 @@ func main() {
 		fmt.Println(err)
 		log.Fatal("failed to create")
 	}
-
-	/*
-		http.HandleFunc("/pricelists/", handlers.CRUDHandler(pricelist.GetRequestBody))
-
-		http.HandleFunc("/payments/", handlers.CRUDHandler(payments.GetRequestBody))
-		http.HandleFunc("/payments/debts", payments.DebtHandler)
-
-		http.HandleFunc("/addresses/", handlers.CRUDHandler(addresses.GetRequestBody))
-
-		http.HandleFunc("/events/", handlers.CRUDHandler(events.GetRequestBody))
-		http.HandleFunc("/events/type/", events.ByTypeHandler)
-
-		http.HandleFunc("/players/", handlers.CRUDHandler(players.GetRequestBody))
-		http.HandleFunc("/players/debts/", players.DebtHandler)
-
-		http.HandleFunc("/positions/", handlers.CRUDHandler(positions.GetRequestBody))
-
-		http.HandleFunc("/presence/", handlers.CRUDHandler(presence.GetRequestBody))
-
-		log.Fatal(http.ListenAndServe(":8094", nil))
-	*/
 
 	cfg := config.LoadDBConfigData()
 	addr := fmt.Sprintf("%s:%v", cfg.Server.Host, cfg.Server.Port)
@@ -50,13 +35,71 @@ func main() {
 	router.Use(middleware.URLFormat)
 	router.Use(middleware.Logger)
 
-	router.Get("/players/", handlers.CRUDHandler(players.GetRequestBody, handlers.GetHelper))
-	router.Get("/hello/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Hello World!"))
+	// routes for positions, not so necessary
+	// needed just to sort players by positions
+	// think about creating the list with the initiation of the db
+	router.Route("/positions", func(r chi.Router) {
+		requestBody := positions.GetRequestBody
+
+		r.Get("/", handlers.CRUDHandler(requestBody, handlers.GetAllHelper))
+		r.Post("/", handlers.CRUDHandler(requestBody, handlers.SaveHelper))
+		r.Delete("/", handlers.CRUDHandler(requestBody, handlers.DeleteHelper))
 	})
 
+	// the same with the pricelist: no need to post anything, just to store the prices
+	// maybe create it with the init also and just make possible to update
 	router.Route("/pricelists", func(r chi.Router) {
+		requestBody := pricelist.GetRequestBody
 
+		r.Get("/", handlers.CRUDHandler(requestBody, handlers.GetAllHelper))
+		r.Post("/", handlers.CRUDHandler(requestBody, handlers.GetHelper))
+		r.Delete("/", handlers.CRUDHandler(requestBody, handlers.GetHelper))
+		r.Patch("/", handlers.CRUDHandler(requestBody, handlers.PatchHelper))
+	})
+
+	// the same again: don't need much actions, have a lot connected with just two
+	// if needed, maybe add addresses for away games, but two basic create with the init
+	router.Route("/addresses", func(r chi.Router) {
+		requestBody := addresses.GetRequestBody
+
+		r.Get("/", handlers.CRUDHandler(requestBody, handlers.GetHelper))
+		r.Post("/", handlers.CRUDHandler(requestBody, handlers.SaveHelper))
+		r.Delete("/", handlers.CRUDHandler(requestBody, handlers.DeleteHelper))
+	})
+
+	// there's ByTypeHandler. Check if it's necessary and add a route
+	router.Route("/events", func(r chi.Router) {
+		requestBody := events.GetRequestBody
+
+		r.Get("/", handlers.CRUDHandler(requestBody, handlers.GetHelper))
+		r.Post("/", handlers.CRUDHandler(requestBody, handlers.SaveHelper))
+		r.Delete("/", handlers.CRUDHandler(requestBody, handlers.DeleteHelper))
+		r.Patch("/", handlers.CRUDHandler(requestBody, handlers.PatchHelper))
+	})
+
+	router.Route("/players", func(r chi.Router) {
+		requestBody := players.GetRequestBody
+
+		r.Get("/", handlers.CRUDHandler(requestBody, handlers.GetHelper))
+		r.Post("/", handlers.CRUDHandler(requestBody, handlers.SaveHelper))
+		r.Delete("/", handlers.CRUDHandler(requestBody, handlers.DeleteHelper))
+		r.Patch("/", handlers.CRUDHandler(requestBody, handlers.PatchHelper))
+	})
+
+	router.Route("/presence", func(r chi.Router) {
+		requestBody := presence.GetRequestBody
+
+		r.Post("/", handlers.CRUDHandler(requestBody, handlers.SaveHelper))
+		r.Delete("/", handlers.CRUDHandler(requestBody, handlers.DeleteHelper))
+	})
+
+	router.Route("/payments", func(r chi.Router) {
+		requestBody := payments.GetRequestBody
+
+		r.Get("/", handlers.CRUDHandler(requestBody, handlers.GetHelper))
+		r.Post("/", handlers.CRUDHandler(requestBody, handlers.SaveHelper))
+		r.Delete("/", handlers.CRUDHandler(requestBody, handlers.DeleteHelper))
+		r.Patch("/", handlers.CRUDHandler(requestBody, handlers.PatchHelper))
 	})
 
 	srv := &http.Server{
@@ -74,5 +117,4 @@ func main() {
 	}
 
 	log.Fatal("server stoppped")
-
 }
