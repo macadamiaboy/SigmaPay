@@ -18,7 +18,7 @@ type Player struct {
 	PositionID int64  `json:"position_id"`
 }
 
-type Debt struct {
+type PaymentCard struct {
 	Id        int64     `json:"id"`
 	Name      string    `json:"name,omitempty"`
 	Surname   string    `json:"surname,omitempty"`
@@ -142,12 +142,12 @@ func (p *Player) GetAllPlayersPayments(db *sql.DB) (*[]any, error) {
 
 	var collection []any
 	for rows.Next() {
-		var debt Debt
-		if err := rows.Scan(&debt.Id, &debt.Name, &debt.Surname, &debt.Price, &debt.Payed, &debt.EventType, &debt.EventDate); err != nil {
+		var pCard PaymentCard
+		if err := rows.Scan(&pCard.Id, &pCard.Name, &pCard.Surname, &pCard.Price, &pCard.Payed, &pCard.EventType, &pCard.EventDate); err != nil {
 			log.Printf("%s: failed to get the player, err: %v", env, err)
 			return nil, fmt.Errorf("%s: failed to get the player, err: %w", env, err)
 		}
-		collection = append(collection, debt)
+		collection = append(collection, pCard)
 	}
 
 	if err = rows.Err(); err != nil {
@@ -176,12 +176,12 @@ func (p *Player) GetAllPlayersDebts(db *sql.DB) (*[]any, error) {
 
 	var collection []any
 	for rows.Next() {
-		var debt Debt
-		if err := rows.Scan(&debt.Id, &debt.Name, &debt.Surname, &debt.Price, &debt.EventType, &debt.EventDate); err != nil {
+		var pCard PaymentCard
+		if err := rows.Scan(&pCard.Id, &pCard.Name, &pCard.Surname, &pCard.Price, &pCard.EventType, &pCard.EventDate); err != nil {
 			log.Printf("%s: failed to get the player, err: %v", env, err)
 			return nil, fmt.Errorf("%s: failed to get the player, err: %w", env, err)
 		}
-		collection = append(collection, debt)
+		collection = append(collection, pCard)
 	}
 
 	if err = rows.Err(); err != nil {
@@ -208,12 +208,12 @@ func (p *Player) GetTotalDebt(db *sql.DB) (*[]any, error) {
 
 	var collection []any
 	for rows.Next() {
-		var debt Debt
-		if err := rows.Scan(&debt.Price); err != nil {
+		var pCard PaymentCard
+		if err := rows.Scan(&pCard.Price); err != nil {
 			log.Printf("%s: failed to get the player, err: %v", env, err)
 			return nil, fmt.Errorf("%s: failed to get the player, err: %w", env, err)
 		}
-		collection = append(collection, debt)
+		collection = append(collection, pCard)
 	}
 
 	if err = rows.Err(); err != nil {

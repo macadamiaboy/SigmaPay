@@ -48,7 +48,7 @@ func main() {
 
 	// the same with the pricelist: no need to post anything, just to store the prices
 	// maybe create it with the init also and just make possible to update
-	router.Route("/pricelists", func(r chi.Router) {
+	router.Route("/pricelist", func(r chi.Router) {
 		requestBody := pricelist.GetRequestBody
 
 		r.Get("/", handlers.CRUDHandler(requestBody, handlers.GetAllHelper))
@@ -75,6 +75,9 @@ func main() {
 		r.Post("/", handlers.CRUDHandler(requestBody, handlers.SaveHelper))
 		r.Delete("/", handlers.CRUDHandler(requestBody, handlers.DeleteHelper))
 		r.Patch("/", handlers.CRUDHandler(requestBody, handlers.PatchHelper))
+
+		r.Get("/all", handlers.CRUDHandler(requestBody, handlers.GetAllHelper))
+		r.Get("/payments", events.PaymentsHandler)
 	})
 
 	router.Route("/players", func(r chi.Router) {
@@ -100,6 +103,8 @@ func main() {
 		r.Post("/", handlers.CRUDHandler(requestBody, handlers.SaveHelper))
 		r.Delete("/", handlers.CRUDHandler(requestBody, handlers.DeleteHelper))
 		r.Patch("/", handlers.CRUDHandler(requestBody, handlers.PatchHelper))
+
+		r.Get("/all", handlers.CRUDHandler(requestBody, handlers.GetAllHelper))
 	})
 
 	srv := &http.Server{
