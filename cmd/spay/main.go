@@ -35,15 +35,31 @@ func main() {
 	router.Use(middleware.URLFormat)
 	router.Use(middleware.Logger)
 
+	// opening db
+	db, err := postgres.PrepareDB()
+	if err != nil {
+		log.Fatalf("failed to prepare the db: %v", err)
+		//http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	defer func() {
+		if err := db.Close(); err != nil {
+			log.Printf("Error closing database: %v", err)
+			//http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}()
+
 	// routes for positions, not so necessary
 	// needed just to sort players by positions
 	// think about creating the list with the initiation of the db
 	router.Route("/positions", func(r chi.Router) {
 		requestBody := positions.GetRequestBody
 
-		r.Get("/", handlers.CRUDHandler(requestBody, handlers.GetAllHelper))
-		r.Post("/", handlers.CRUDHandler(requestBody, handlers.SaveHelper))
-		r.Delete("/", handlers.CRUDHandler(requestBody, handlers.DeleteHelper))
+		r.Get("/", handlers.CRUDHandler(db, requestBody, handlers.GetAllHelper))
+		r.Post("/", handlers.CRUDHandler(db, requestBody, handlers.SaveHelper))
+		r.Delete("/", handlers.CRUDHandler(db, requestBody, handlers.DeleteHelper))
 	})
 
 	// the same with the pricelist: no need to post anything, just to store the prices
@@ -51,10 +67,10 @@ func main() {
 	router.Route("/pricelist", func(r chi.Router) {
 		requestBody := pricelist.GetRequestBody
 
-		r.Get("/", handlers.CRUDHandler(requestBody, handlers.GetAllHelper))
-		r.Post("/", handlers.CRUDHandler(requestBody, handlers.GetHelper))
-		r.Delete("/", handlers.CRUDHandler(requestBody, handlers.GetHelper))
-		r.Patch("/", handlers.CRUDHandler(requestBody, handlers.PatchHelper))
+		r.Get("/", handlers.CRUDHandler(db, requestBody, handlers.GetAllHelper))
+		r.Post("/", handlers.CRUDHandler(db, requestBody, handlers.GetHelper))
+		r.Delete("/", handlers.CRUDHandler(db, requestBody, handlers.GetHelper))
+		r.Patch("/", handlers.CRUDHandler(db, requestBody, handlers.PatchHelper))
 	})
 
 	// the same again: don't need much actions, have a lot connected with just two
@@ -62,49 +78,51 @@ func main() {
 	router.Route("/addresses", func(r chi.Router) {
 		requestBody := addresses.GetRequestBody
 
-		r.Get("/", handlers.CRUDHandler(requestBody, handlers.GetHelper))
-		r.Post("/", handlers.CRUDHandler(requestBody, handlers.SaveHelper))
-		r.Delete("/", handlers.CRUDHandler(requestBody, handlers.DeleteHelper))
+		r.Get("/", handlers.CRUDHandler(db, requestBody, handlers.GetHelper))
+		r.Post("/", handlers.CRUDHandler(db, requestBody, handlers.SaveHelper))
+		r.Delete("/", handlers.CRUDHandler(db, requestBody, handlers.DeleteHelper))
 	})
 
 	// there's ByTypeHandler. Check if it's necessary and add a route
 	router.Route("/events", func(r chi.Router) {
 		requestBody := events.GetRequestBody
 
-		r.Get("/", handlers.CRUDHandler(requestBody, handlers.GetHelper))
-		r.Post("/", handlers.CRUDHandler(requestBody, handlers.SaveHelper))
-		r.Delete("/", handlers.CRUDHandler(requestBody, handlers.DeleteHelper))
-		r.Patch("/", handlers.CRUDHandler(requestBody, handlers.PatchHelper))
+		r.Get("/", handlers.CRUDHandler(db, requestBody, handlers.GetHelper))
+		r.Post("/", handlers.CRUDHandler(db, requestBody, handlers.SaveHelper))
+		r.Delete("/", handlers.CRUDHandler(db, requestBody, handlers.DeleteHelper))
+		r.Patch("/", handlers.CRUDHandler(db, requestBody, handlers.PatchHelper))
 
-		r.Get("/all", handlers.CRUDHandler(requestBody, handlers.GetAllHelper))
-		r.Get("/payments", events.PaymentsHandler)
+		r.Get("/all", handlers.CRUDHandler(db, requestBody, handlers.GetAllHelper))
+		r.Get("/payments", events.PaymentsHandler(db))
 	})
 
 	router.Route("/players", func(r chi.Router) {
 		requestBody := players.GetRequestBody
 
-		r.Get("/", handlers.CRUDHandler(requestBody, handlers.GetHelper))
-		r.Post("/", handlers.CRUDHandler(requestBody, handlers.SaveHelper))
-		r.Delete("/", handlers.CRUDHandler(requestBody, handlers.DeleteHelper))
-		r.Patch("/", handlers.CRUDHandler(requestBody, handlers.PatchHelper))
+		r.Get("/", handlers.CRUDHandler(db, requestBody, handlers.GetHelper))
+		r.Post("/", handlers.CRUDHandler(db, requestBody, handlers.SaveHelper))
+		r.Delete("/", handlers.CRUDHandler(db, requestBody, handlers.DeleteHelper))
+		r.Patch("/", handlers.CRUDHandler(db, requestBody, handlers.PatchHelper))
+
+		r.Get("/all", handlers.CRUDHandler(db, requestBody, handlers.GetAllHelper))
 	})
 
 	router.Route("/presence", func(r chi.Router) {
 		requestBody := presence.GetRequestBody
 
-		r.Post("/", handlers.CRUDHandler(requestBody, handlers.SaveHelper))
-		r.Delete("/", handlers.CRUDHandler(requestBody, handlers.DeleteHelper))
+		r.Post("/", handlers.CRUDHandler(db, requestBody, handlers.SaveHelper))
+		r.Delete("/", handlers.CRUDHandler(db, requestBody, handlers.DeleteHelper))
 	})
 
 	router.Route("/payments", func(r chi.Router) {
 		requestBody := payments.GetRequestBody
 
-		r.Get("/", handlers.CRUDHandler(requestBody, handlers.GetHelper))
-		r.Post("/", handlers.CRUDHandler(requestBody, handlers.SaveHelper))
-		r.Delete("/", handlers.CRUDHandler(requestBody, handlers.DeleteHelper))
-		r.Patch("/", handlers.CRUDHandler(requestBody, handlers.PatchHelper))
+		r.Get("/", handlers.CRUDHandler(db, requestBody, handlers.GetHelper))
+		r.Post("/", handlers.CRUDHandler(db, requestBody, handlers.SaveHelper))
+		r.Delete("/", handlers.CRUDHandler(db, requestBody, handlers.DeleteHelper))
+		r.Patch("/", handlers.CRUDHandler(db, requestBody, handlers.PatchHelper))
 
-		r.Get("/all", handlers.CRUDHandler(requestBody, handlers.GetAllHelper))
+		r.Get("/all", handlers.CRUDHandler(db, requestBody, handlers.GetAllHelper))
 	})
 
 	srv := &http.Server{

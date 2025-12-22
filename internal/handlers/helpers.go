@@ -23,30 +23,14 @@ type Response struct {
 	Data    *[]any
 }
 
-func CRUDHandler( /*db *postgres.DataBase, */ bodyGetter func(*http.Request) (CRUD, error), fn func(CRUD, *sql.DB) (*Response, error)) http.HandlerFunc {
+func CRUDHandler(db *postgres.DataBase, bodyGetter func(*http.Request) (CRUD, error), fn func(CRUD, *sql.DB) (*Response, error)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
 		requestBody, err := bodyGetter(r)
 		if err != nil {
 			log.Fatalf("failed to get the request body: %v", err)
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-
-		db, err := postgres.PrepareDB()
-		if err != nil {
-			log.Fatalf("failed to prepare the db: %v", err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		defer func() {
-			if err := db.Close(); err != nil {
-				log.Printf("Error closing database: %v", err)
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-		}()
 
 		response, err := fn(requestBody, db.Connection)
 		if err != nil {
