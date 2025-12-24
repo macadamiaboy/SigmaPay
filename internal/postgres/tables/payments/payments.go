@@ -101,7 +101,7 @@ func (p *Payment) GetAll(db *sql.DB) (*[]any, error) {
 	return &collection, nil
 }
 
-func (p *Payment) GetNotPayed(db *sql.DB) (*[]any, error) {
+func (p *Payment) GetDebts(db *sql.DB) (*[]any, error) {
 	env := "postgres.tables-methods.payments.GetNotPayed"
 
 	rows, err := db.Query("SELECT id, player_id, event_id, price, payed FROM payments WHERE payed = false;")

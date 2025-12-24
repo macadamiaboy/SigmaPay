@@ -14,7 +14,6 @@ import (
 	"github.com/macadamiaboy/SigmaPay/internal/handlers/events"
 	"github.com/macadamiaboy/SigmaPay/internal/handlers/payments"
 	"github.com/macadamiaboy/SigmaPay/internal/handlers/players"
-	"github.com/macadamiaboy/SigmaPay/internal/handlers/positions"
 	"github.com/macadamiaboy/SigmaPay/internal/handlers/presence"
 	"github.com/macadamiaboy/SigmaPay/internal/handlers/pricelist"
 	"github.com/macadamiaboy/SigmaPay/internal/postgres"
@@ -54,13 +53,15 @@ func main() {
 	// routes for positions, not so necessary
 	// needed just to sort players by positions
 	// think about creating the list with the initiation of the db
-	router.Route("/positions", func(r chi.Router) {
-		requestBody := positions.GetRequestBody
+	/*
+		router.Route("/positions", func(r chi.Router) {
+			requestBody := positions.GetRequestBody
 
-		r.Get("/", handlers.CRUDHandler(db, requestBody, handlers.GetAllHelper))
-		r.Post("/", handlers.CRUDHandler(db, requestBody, handlers.SaveHelper))
-		r.Delete("/", handlers.CRUDHandler(db, requestBody, handlers.DeleteHelper))
-	})
+			r.Get("/", handlers.CRUDHandler(db, requestBody, handlers.GetAllHelper))
+			r.Post("/", handlers.CRUDHandler(db, requestBody, handlers.SaveHelper))
+			r.Delete("/", handlers.CRUDHandler(db, requestBody, handlers.DeleteHelper))
+		})
+	*/
 
 	// the same with the pricelist: no need to post anything, just to store the prices
 	// maybe create it with the init also and just make possible to update
@@ -105,6 +106,13 @@ func main() {
 		r.Patch("/", handlers.CRUDHandler(db, requestBody, handlers.PatchHelper))
 
 		r.Get("/all", handlers.CRUDHandler(db, requestBody, handlers.GetAllHelper))
+		r.Get("/sigma", players.SigmaHandler(db))
+
+		r.Route("/debts", func(r chi.Router) {
+			r.Get("/payments", players.GetAllPlayersPaymentsHandler(db))
+			r.Get("/all", players.GetAllPlayersDebtsHandler(db))
+			r.Get("/total", players.GetTotalDebtHandler(db))
+		})
 	})
 
 	router.Route("/presence", func(r chi.Router) {
@@ -117,12 +125,14 @@ func main() {
 	router.Route("/payments", func(r chi.Router) {
 		requestBody := payments.GetRequestBody
 
-		r.Get("/", handlers.CRUDHandler(db, requestBody, handlers.GetHelper))
+		//r.Get("/", handlers.CRUDHandler(db, requestBody, handlers.GetHelper))
+		//r.Get("/all", handlers.CRUDHandler(db, requestBody, handlers.GetAllHelper))
+
 		r.Post("/", handlers.CRUDHandler(db, requestBody, handlers.SaveHelper))
 		r.Delete("/", handlers.CRUDHandler(db, requestBody, handlers.DeleteHelper))
 		r.Patch("/", handlers.CRUDHandler(db, requestBody, handlers.PatchHelper))
 
-		r.Get("/all", handlers.CRUDHandler(db, requestBody, handlers.GetAllHelper))
+		r.Get("/debts", events.PaymentsHandler(db))
 	})
 
 	srv := &http.Server{

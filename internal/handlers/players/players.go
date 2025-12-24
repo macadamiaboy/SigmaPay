@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strings"
 
 	"github.com/macadamiaboy/SigmaPay/internal/handlers"
 	"github.com/macadamiaboy/SigmaPay/internal/postgres"
@@ -28,70 +27,88 @@ func GetRequestBody(r *http.Request) (handlers.CRUD, error) {
 	return &requestBody.Player, nil
 }
 
-func DebtHandler(w http.ResponseWriter, r *http.Request) {
-	var fn func(*sql.DB) (*[]any, error)
+func debtHelper(db *postgres.DataBase, fn func(*sql.DB, *players.Player) (*[]any, error)) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		requestBody, err := GetRequestBody(r)
+		if err != nil {
+			log.Fatalf("failed to get the request body: %v", err)
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 
-	if r.Method != http.MethodGet {
-		http.Error(w, "There's no such method", http.StatusMethodNotAllowed)
-		return
-	}
+		player, ok := requestBody.(*players.Player)
+		if !ok {
+			msg := "provided request body is not of the expected type"
+			log.Fatal(msg)
+			http.Error(w, msg, http.StatusBadRequest)
+			return
+		}
 
-	requestBody, err := GetRequestBody(r)
-	if err != nil {
-		log.Fatalf("failed to get the request body: %v", err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	db, err := postgres.PrepareDB()
-	if err != nil {
-		log.Fatalf("failed to prepare the db: %v", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	defer func() {
-		if err := db.Close(); err != nil {
-			log.Printf("Error closing database: %v", err)
+		data, err := fn(db.Connection, player)
+		if err != nil {
+			log.Fatalf("failed to get the data: %v", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-	}()
 
-	event, ok := requestBody.(*players.Player)
-	if !ok {
-		msg := "provided request body is not of the expected type"
-		log.Fatal(msg)
-		http.Error(w, msg, http.StatusBadRequest)
-		return
+		response := handlers.Response{
+			Message: "Got all records successfully",
+			Data:    data,
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		if err = json.NewEncoder(w).Encode(response); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	}
+}
 
-	if strings.Contains(r.URL.Path, "/total") {
-		fn = event.GetTotalDebt
-	} else if strings.Contains(r.URL.Path, "/unpayed") {
-		fn = event.GetAllPlayersDebts
-	} else if strings.Contains(r.URL.Path, "/all") {
-		fn = event.GetAllPlayersPayments
-	} else {
-		http.Error(w, "There's no such method", http.StatusMethodNotAllowed)
-		return
-	}
+func GetAllPlayersPaymentsHandler(db *postgres.DataBase) http.HandlerFunc {
+	return debtHelper(db, players.GetAllPlayersPayments)
+}
 
-	data, err := fn(db.Connection)
-	if err != nil {
-		log.Fatalf("failed to get the data: %v", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+func GetAllPlayersDebtsHandler(db *postgres.DataBase) http.HandlerFunc {
+	return debtHelper(db, players.GetAllPlayersDebts)
+}
 
-	response := handlers.Response{
-		Message: "Got all records successfully",
-		Data:    data,
-	}
+func GetTotalDebtHandler(db *postgres.DataBase) http.HandlerFunc {
+	return debtHelper(db, players.GetTotalDebt)
+}
 
-	w.Header().Set("Content-Type", "application/json")
-	if err = json.NewEncoder(w).Encode(response); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+func SigmaHandler(db *postgres.DataBase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		requestBody, err := GetRequestBody(r)
+		if err != nil {
+			log.Fatalf("failed to get the request body: %v", err)
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		player, ok := requestBody.(*players.Player)
+		if !ok {
+			msg := "provided request body is not of the expected type"
+			log.Fatal(msg)
+			http.Error(w, msg, http.StatusBadRequest)
+			return
+		}
+
+		data, err := player.GetAllSigma(db.Connection)
+		if err != nil {
+			log.Fatalf("failed to get the data: %v", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		response := handlers.Response{
+			Message: "Got all records successfully",
+			Data:    data,
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		if err = json.NewEncoder(w).Encode(response); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	}
 }

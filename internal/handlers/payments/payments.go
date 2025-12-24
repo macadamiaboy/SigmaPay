@@ -1,7 +1,6 @@
 package payments
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -27,61 +26,39 @@ func GetRequestBody(r *http.Request) (handlers.CRUD, error) {
 	return &requestBody.Payment, nil
 }
 
-func DebtHandler(w http.ResponseWriter, r *http.Request) {
-	var fn func(*sql.DB) (*[]any, error)
+func DebtHandler(db *postgres.DataBase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		requestBody, err := GetRequestBody(r)
+		if err != nil {
+			log.Fatalf("failed to get the request body: %v", err)
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 
-	if r.Method != http.MethodGet {
-		http.Error(w, "There's no such method", http.StatusMethodNotAllowed)
-		return
-	}
+		payment, ok := requestBody.(*payments.Payment)
+		if !ok {
+			msg := "provided request body is not of the expected type"
+			log.Fatal(msg)
+			http.Error(w, msg, http.StatusBadRequest)
+			return
+		}
 
-	requestBody, err := GetRequestBody(r)
-	if err != nil {
-		log.Fatalf("failed to get the request body: %v", err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	db, err := postgres.PrepareDB()
-	if err != nil {
-		log.Fatalf("failed to prepare the db: %v", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	defer func() {
-		if err := db.Close(); err != nil {
-			log.Printf("Error closing database: %v", err)
+		data, err := payment.GetDebts(db.Connection)
+		if err != nil {
+			log.Fatalf("failed to get the data: %v", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-	}()
 
-	payment, ok := requestBody.(*payments.Payment)
-	if !ok {
-		msg := "provided request body is not of the expected type"
-		log.Fatal(msg)
-		http.Error(w, msg, http.StatusBadRequest)
-		return
-	}
+		response := handlers.Response{
+			Message: "Got all records successfully",
+			Data:    data,
+		}
 
-	fn = payment.GetNotPayed
-
-	data, err := fn(db.Connection)
-	if err != nil {
-		log.Fatalf("failed to get the data: %v", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	response := handlers.Response{
-		Message: "Got all records successfully",
-		Data:    data,
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	if err = json.NewEncoder(w).Encode(response); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		w.Header().Set("Content-Type", "application/json")
+		if err = json.NewEncoder(w).Encode(response); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	}
 }
