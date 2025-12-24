@@ -18,14 +18,14 @@ type Player struct {
 	PositionID int64  `json:"position_id"`
 }
 
-type Debt struct {
-	Id        int64
-	Name      string
-	Surname   string
-	Price     int
-	Payed     bool
-	EventType string
-	EventDate time.Time
+type PaymentCard struct {
+	Id        int64     `json:"id"`
+	Name      string    `json:"name,omitempty"`
+	Surname   string    `json:"surname,omitempty"`
+	Price     int       `json:"price"`
+	Payed     bool      `json:"payed"`
+	EventType string    `json:"event_type,omitempty"`
+	EventDate time.Time `json:"event_date,omitempty"`
 }
 
 func (p *Player) Save(db *sql.DB) error {
@@ -117,6 +117,34 @@ func (p *Player) GetAll(db *sql.DB) (*[]any, error) {
 	return &collection, nil
 }
 
+func (p *Player) GetAllSigma(db *sql.DB) (*[]any, error) {
+	env := "postgres.tables-methods.players.GetAll"
+
+	rows, err := db.Query("SELECT id, name, surname, tg_link, is_sigma, position_id FROM players WHERE is_sigma = true;")
+	if err != nil {
+		log.Printf("%s: failed to execute the query, err: %v", env, err)
+		return nil, fmt.Errorf("%s: failed to execute the query, err: %w", env, err)
+	}
+	defer rows.Close()
+
+	var collection []any
+	for rows.Next() {
+		var player Player
+		if err := rows.Scan(&player.Id, &player.Name, &player.Surname, &player.TgLink, &player.IsSigma, &player.PositionID); err != nil {
+			log.Printf("%s: failed to get the player, err: %v", env, err)
+			return nil, fmt.Errorf("%s: failed to get the player, err: %w", env, err)
+		}
+		collection = append(collection, player)
+	}
+
+	if err = rows.Err(); err != nil {
+		log.Printf("%s: error occured with table rows, err: %v", env, err)
+		return nil, fmt.Errorf("%s: error occured with table rows, err: %w", env, err)
+	}
+
+	return &collection, nil
+}
+
 func (p *Player) Delete(db *sql.DB) error {
 	env := "postgres.tables-methods.players.Delete"
 	query := "DELETE FROM players WHERE id = $1;"
@@ -124,7 +152,7 @@ func (p *Player) Delete(db *sql.DB) error {
 	return tablesmethods.DeleteByIDHelper(db, env, query, p.Id)
 }
 
-func (p *Player) GetAllPlayersPayments(db *sql.DB) (*[]any, error) {
+func GetAllPlayersPayments(db *sql.DB, p *Player) (*[]any, error) {
 	env := "postgres.tables-methods.players.GetAllPlayersPayments"
 
 	rows, err := db.Query(`
@@ -142,12 +170,12 @@ func (p *Player) GetAllPlayersPayments(db *sql.DB) (*[]any, error) {
 
 	var collection []any
 	for rows.Next() {
-		var debt Debt
-		if err := rows.Scan(&debt.Id, &debt.Name, &debt.Surname, &debt.Price, &debt.Payed, &debt.EventType, &debt.EventDate); err != nil {
+		var pCard PaymentCard
+		if err := rows.Scan(&pCard.Id, &pCard.Name, &pCard.Surname, &pCard.Price, &pCard.Payed, &pCard.EventType, &pCard.EventDate); err != nil {
 			log.Printf("%s: failed to get the player, err: %v", env, err)
 			return nil, fmt.Errorf("%s: failed to get the player, err: %w", env, err)
 		}
-		collection = append(collection, debt)
+		collection = append(collection, pCard)
 	}
 
 	if err = rows.Err(); err != nil {
@@ -158,7 +186,7 @@ func (p *Player) GetAllPlayersPayments(db *sql.DB) (*[]any, error) {
 	return &collection, nil
 }
 
-func (p *Player) GetAllPlayersDebts(db *sql.DB) (*[]any, error) {
+func GetAllPlayersDebts(db *sql.DB, p *Player) (*[]any, error) {
 	env := "postgres.tables-methods.players.GetAllPlayersDebts"
 
 	rows, err := db.Query(`
@@ -176,12 +204,12 @@ func (p *Player) GetAllPlayersDebts(db *sql.DB) (*[]any, error) {
 
 	var collection []any
 	for rows.Next() {
-		var debt Debt
-		if err := rows.Scan(&debt.Id, &debt.Name, &debt.Surname, &debt.Price, &debt.EventType, &debt.EventDate); err != nil {
+		var pCard PaymentCard
+		if err := rows.Scan(&pCard.Id, &pCard.Name, &pCard.Surname, &pCard.Price, &pCard.EventType, &pCard.EventDate); err != nil {
 			log.Printf("%s: failed to get the player, err: %v", env, err)
 			return nil, fmt.Errorf("%s: failed to get the player, err: %w", env, err)
 		}
-		collection = append(collection, debt)
+		collection = append(collection, pCard)
 	}
 
 	if err = rows.Err(); err != nil {
@@ -192,7 +220,7 @@ func (p *Player) GetAllPlayersDebts(db *sql.DB) (*[]any, error) {
 	return &collection, nil
 }
 
-func (p *Player) GetTotalDebt(db *sql.DB) (*[]any, error) {
+func GetTotalDebt(db *sql.DB, p *Player) (*[]any, error) {
 	env := "postgres.tables-methods.players.GetTotalDebt"
 
 	rows, err := db.Query(`
@@ -208,12 +236,12 @@ func (p *Player) GetTotalDebt(db *sql.DB) (*[]any, error) {
 
 	var collection []any
 	for rows.Next() {
-		var debt Debt
-		if err := rows.Scan(&debt.Price); err != nil {
+		var pCard PaymentCard
+		if err := rows.Scan(&pCard.Price); err != nil {
 			log.Printf("%s: failed to get the player, err: %v", env, err)
 			return nil, fmt.Errorf("%s: failed to get the player, err: %w", env, err)
 		}
-		collection = append(collection, debt)
+		collection = append(collection, pCard)
 	}
 
 	if err = rows.Err(); err != nil {

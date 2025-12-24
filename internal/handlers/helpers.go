@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strings"
 
 	"github.com/macadamiaboy/SigmaPay/internal/postgres"
 )
@@ -24,49 +23,14 @@ type Response struct {
 	Data    *[]any
 }
 
-func CRUDHandler(bodyGetter func(*http.Request) (CRUD, error)) http.HandlerFunc {
+func CRUDHandler(db *postgres.DataBase, bodyGetter func(*http.Request) (CRUD, error), fn func(CRUD, *sql.DB) (*Response, error)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var fn func(CRUD, *sql.DB) (*Response, error)
-
-		switch r.Method {
-		case http.MethodGet:
-			if strings.Contains(r.URL.Path, "/all") {
-				fn = GetAllHelper
-			} else {
-				fn = GetHelper
-			}
-		case http.MethodPost:
-			fn = SaveHelper
-		case http.MethodPatch:
-			fn = PatchHelper
-		case http.MethodDelete:
-			fn = DeleteHelper
-		default:
-			http.Error(w, "There's no such method", http.StatusMethodNotAllowed)
-			return
-		}
-
 		requestBody, err := bodyGetter(r)
 		if err != nil {
 			log.Fatalf("failed to get the request body: %v", err)
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-
-		db, err := postgres.PrepareDB()
-		if err != nil {
-			log.Fatalf("failed to prepare the db: %v", err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		defer func() {
-			if err := db.Close(); err != nil {
-				log.Printf("Error closing database: %v", err)
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-		}()
 
 		response, err := fn(requestBody, db.Connection)
 		if err != nil {

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	tablesmethods "github.com/macadamiaboy/SigmaPay/internal/postgres/tables"
+	"github.com/macadamiaboy/SigmaPay/internal/postgres/tables/players"
 )
 
 type Event struct {
@@ -142,6 +143,40 @@ func (e *Event) GetAllGames(db *sql.DB) (*[]any, error) {
 	reqType := "Игра"
 
 	return e.getAllByType(db, env, reqType)
+}
+
+func (e *Event) GetAllEventPayments(db *sql.DB) (*[]any, error) {
+	env := "postgres.tables-methods.events.GetAllEventPayments"
+
+	rows, err := db.Query(`
+	SELECT pay.id, pl.name, pl.surname, pay.price, pay.payed, et.type, ev.datetime
+	FROM events ev
+	JOIN payments pay ON ev.id = pay.event_id
+	JOIN players pl ON pay.player_id = pl.id
+	JOIN pricelist et ON ev.type_id = et.id
+	WHERE ev.id = $1;`, e.Id)
+	if err != nil {
+		log.Printf("%s: failed to execute the query, err: %v", env, err)
+		return nil, fmt.Errorf("%s: failed to execute the query, err: %w", env, err)
+	}
+	defer rows.Close()
+
+	var collection []any
+	for rows.Next() {
+		var pCard players.PaymentCard
+		if err := rows.Scan(&pCard.Id, &pCard.Name, &pCard.Surname, &pCard.Price, &pCard.Payed, &pCard.EventType, &pCard.EventDate); err != nil {
+			log.Printf("%s: failed to get the player, err: %v", env, err)
+			return nil, fmt.Errorf("%s: failed to get the player, err: %w", env, err)
+		}
+		collection = append(collection, pCard)
+	}
+
+	if err = rows.Err(); err != nil {
+		log.Printf("%s: error occured with table rows, err: %v", env, err)
+		return nil, fmt.Errorf("%s: error occured with table rows, err: %w", env, err)
+	}
+
+	return &collection, nil
 }
 
 func (e *Event) Delete(db *sql.DB) error {
