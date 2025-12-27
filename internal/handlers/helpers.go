@@ -27,7 +27,7 @@ func CRUDHandler(db *postgres.DataBase, bodyGetter func(*http.Request) (CRUD, er
 	return func(w http.ResponseWriter, r *http.Request) {
 		requestBody, err := bodyGetter(r)
 		if err != nil {
-			log.Fatalf("failed to get the request body: %v", err)
+			log.Printf("failed to get the request body: %v", err)
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
@@ -51,7 +51,7 @@ func SaveHelper(requestBody CRUD, db *sql.DB) (*Response, error) {
 	env := "handlers.helpers.SaveHelper"
 
 	if err := requestBody.Save(db); err != nil {
-		log.Fatalf("%s: failed to save the record: %v", env, err)
+		log.Printf("%s: failed to save the record: %v", env, err)
 		return nil, fmt.Errorf("failed to save the record: %w", err)
 	}
 
@@ -67,7 +67,7 @@ func GetHelper(requestBody CRUD, db *sql.DB) (*Response, error) {
 
 	data, err := requestBody.Get(db)
 	if err != nil {
-		log.Fatalf("%s: failed to get the record: %v", env, err)
+		log.Printf("%s: failed to get the record: %v", env, err)
 		return nil, fmt.Errorf("failed to get the record: %w", err)
 	}
 
@@ -84,7 +84,7 @@ func GetAllHelper(requestBody CRUD, db *sql.DB) (*Response, error) {
 
 	data, err := requestBody.GetAll(db)
 	if err != nil {
-		log.Fatalf("%s: failed to get records: %v", env, err)
+		log.Printf("%s: failed to get records: %v", env, err)
 		return nil, fmt.Errorf("failed to get records: %w", err)
 	}
 
@@ -107,7 +107,7 @@ func DeleteHelper(requestBody CRUD, db *sql.DB) (*Response, error) {
 
 	if et, ok := event.(CRUD); ok {
 		if err = et.Delete(db); err != nil {
-			log.Fatalf("%s: failed to delete the record: %v", env, err)
+			log.Printf("%s: failed to delete the record: %v", env, err)
 			return nil, fmt.Errorf("failed to delete the record: %w", err)
 		}
 	}
@@ -123,7 +123,7 @@ func PatchHelper(requestBody CRUD, db *sql.DB) (*Response, error) {
 	env := "handlers.helpers.PatchHelper"
 
 	if err := requestBody.Update(db); err != nil {
-		log.Fatalf("%s: failed to update the record: %v", env, err)
+		log.Printf("%s: failed to update the record: %v", env, err)
 		return nil, fmt.Errorf("failed to update the record: %w", err)
 	}
 
