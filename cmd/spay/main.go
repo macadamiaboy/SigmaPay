@@ -14,6 +14,7 @@ import (
 	"github.com/macadamiaboy/SigmaPay/internal/handlers/events"
 	"github.com/macadamiaboy/SigmaPay/internal/handlers/payments"
 	"github.com/macadamiaboy/SigmaPay/internal/handlers/players"
+	"github.com/macadamiaboy/SigmaPay/internal/handlers/positions"
 	"github.com/macadamiaboy/SigmaPay/internal/handlers/presence"
 	"github.com/macadamiaboy/SigmaPay/internal/handlers/pricelist"
 	"github.com/macadamiaboy/SigmaPay/internal/postgres"
@@ -38,33 +39,22 @@ func main() {
 	db, err := postgres.PrepareDB()
 	if err != nil {
 		log.Fatalf("failed to prepare the db: %v", err)
-		//http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	defer func() {
 		if err := db.Close(); err != nil {
-			log.Printf("Error closing database: %v", err)
-			//http.Error(w, err.Error(), http.StatusInternalServerError)
+			log.Fatalf("Error closing database: %v", err)
 			return
 		}
 	}()
 
-	// routes for positions, not so necessary
-	// needed just to sort players by positions
-	// think about creating the list with the initiation of the db
-	/*
-		router.Route("/positions", func(r chi.Router) {
-			requestBody := positions.GetRequestBody
+	router.Route("/positions", func(r chi.Router) {
+		requestBody := positions.GetRequestBody
 
-			r.Get("/", handlers.CRUDHandler(db, requestBody, handlers.GetAllHelper))
-			r.Post("/", handlers.CRUDHandler(db, requestBody, handlers.SaveHelper))
-			r.Delete("/", handlers.CRUDHandler(db, requestBody, handlers.DeleteHelper))
-		})
-	*/
+		r.Get("/", handlers.CRUDHandler(db, requestBody, handlers.GetAllHelper))
+	})
 
-	// the same with the pricelist: no need to post anything, just to store the prices
-	// maybe create it with the init also and just make possible to update
 	router.Route("/pricelist", func(r chi.Router) {
 		requestBody := pricelist.GetRequestBody
 
@@ -74,8 +64,6 @@ func main() {
 		r.Patch("/", handlers.CRUDHandler(db, requestBody, handlers.PatchHelper))
 	})
 
-	// the same again: don't need much actions, have a lot connected with just two addresses
-	// if needed, maybe add addresses for away games, but two basic create with the init
 	router.Route("/addresses", func(r chi.Router) {
 		requestBody := addresses.GetRequestBody
 
@@ -126,14 +114,14 @@ func main() {
 	router.Route("/payments", func(r chi.Router) {
 		requestBody := payments.GetRequestBody
 
-		//r.Get("/", handlers.CRUDHandler(db, requestBody, handlers.GetHelper))
-		//r.Get("/all", handlers.CRUDHandler(db, requestBody, handlers.GetAllHelper))
+		r.Get("/", handlers.CRUDHandler(db, requestBody, handlers.GetHelper))
+		r.Get("/all", handlers.CRUDHandler(db, requestBody, handlers.GetAllHelper))
 
 		r.Post("/", handlers.CRUDHandler(db, requestBody, handlers.SaveHelper))
 		r.Delete("/", handlers.CRUDHandler(db, requestBody, handlers.DeleteHelper))
 		r.Patch("/", handlers.CRUDHandler(db, requestBody, handlers.PatchHelper))
 
-		r.Get("/debts", events.PaymentsHandler(db))
+		r.Get("/debts", payments.DebtHandler(db))
 	})
 
 	srv := &http.Server{

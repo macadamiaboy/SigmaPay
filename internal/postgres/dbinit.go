@@ -34,6 +34,10 @@ func InitDatabase(db *sql.DB) error {
 		return fmt.Errorf("error occured during init process: %w", err)
 	}
 
+	if err := insertPositions(db); err != nil {
+		return fmt.Errorf("error occured during init process: %w", err)
+	}
+
 	return nil
 }
 
@@ -80,7 +84,22 @@ func initPositionsTable(db *sql.DB) error {
 	err := execStatement(db, `
 	CREATE TABLE IF NOT EXISTS positions(
 	    id BIGSERIAL PRIMARY KEY,
-	    position VARCHAR(30) NOT NULL);
+	    position VARCHAR(30) NOT NULL UNIQUE);
+	`)
+	if err != nil {
+		return fmt.Errorf("%s: %w", env, err)
+	}
+
+	return nil
+}
+
+func insertPositions(db *sql.DB) error {
+	env := "dbinit.insertPositions"
+
+	err := execStatement(db, `
+	INSERT INTO positions (position)
+	VALUES ('Связующий'), ('Доигровщик'), ('Либеро'), ('Центральный блокирующий'), ('Диагональный')
+	ON CONFLICT (position) DO NOTHING;
 	`)
 	if err != nil {
 		return fmt.Errorf("%s: %w", env, err)
