@@ -65,7 +65,7 @@ func initAddressessTable(db *sql.DB) error {
 	    id BIGSERIAL PRIMARY KEY,
 	    street VARCHAR(30) NOT NULL,
 	    house INTEGER NOT NULL,
-		building INTEGER NOT NULL);
+		building INTEGER);
 	`)
 	if err != nil {
 		return fmt.Errorf("%s: %w", env, err)

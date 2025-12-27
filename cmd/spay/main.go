@@ -74,7 +74,7 @@ func main() {
 		r.Patch("/", handlers.CRUDHandler(db, requestBody, handlers.PatchHelper))
 	})
 
-	// the same again: don't need much actions, have a lot connected with just two
+	// the same again: don't need much actions, have a lot connected with just two addresses
 	// if needed, maybe add addresses for away games, but two basic create with the init
 	router.Route("/addresses", func(r chi.Router) {
 		requestBody := addresses.GetRequestBody
@@ -84,7 +84,6 @@ func main() {
 		r.Delete("/", handlers.CRUDHandler(db, requestBody, handlers.DeleteHelper))
 	})
 
-	// there's ByTypeHandler. Check if it's necessary and add a route
 	router.Route("/events", func(r chi.Router) {
 		requestBody := events.GetRequestBody
 
@@ -95,6 +94,8 @@ func main() {
 
 		r.Get("/all", handlers.CRUDHandler(db, requestBody, handlers.GetAllHelper))
 		r.Get("/payments", events.PaymentsHandler(db))
+		//r.Get("/types", events.ByTypeHandler(db))
+		r.Get("/{year}-{month}", events.ByMonthHandler(db))
 	})
 
 	router.Route("/players", func(r chi.Router) {
@@ -108,10 +109,10 @@ func main() {
 		r.Get("/all", handlers.CRUDHandler(db, requestBody, handlers.GetAllHelper))
 		r.Get("/sigma", players.SigmaHandler(db))
 
-		r.Route("/debts", func(r chi.Router) {
-			r.Get("/payments", players.GetAllPlayersPaymentsHandler(db))
-			r.Get("/all", players.GetAllPlayersDebtsHandler(db))
-			r.Get("/total", players.GetTotalDebtHandler(db))
+		r.Route("/payments", func(r chi.Router) {
+			r.Get("/", players.GetAllPlayersPaymentsHandler(db))
+			r.Get("/debts", players.GetAllPlayersDebtsHandler(db))
+			r.Get("/total_debt", players.GetTotalDebtHandler(db))
 		})
 	})
 

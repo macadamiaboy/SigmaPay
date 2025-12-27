@@ -17,6 +17,13 @@ type Event struct {
 	DateTime  time.Time `json:"datetime"`
 }
 
+type EventCard struct {
+	Id       int64     `json:"id"`
+	Type     string    `json:"type"`
+	Address  string    `json:"address"`
+	DateTime time.Time `json:"datetime"`
+}
+
 func (e *Event) Save(db *sql.DB) error {
 	env := "postgres.tables-methods.events.Save"
 	query := "INSERT INTO events(type_id, address_id, datetime) VALUES($1, $2, $3);"
@@ -100,9 +107,42 @@ func (e *Event) GetAll(db *sql.DB) (*[]any, error) {
 	return &collection, nil
 }
 
+func (e *Event) GetAllByMonth(db *sql.DB, reqMonth string, reqYear string) (*[]any, error) {
+	env := "postgres.tables-methods.events.GetAllByMonth"
+
+	rows, err := db.Query(`
+	SELECT e.id, p.type, CONCAT(a.street, ' ', a.house, 'к', a.building) AS address, e.datetime
+	FROM events e
+	JOIN pricelist p ON e.type_id = p.id
+	JOIN addresses a ON e.address_id = a.id
+	WHERE EXTRACT(MONTH FROM e.datetime) = $1 AND EXTRACT(YEAR FROM e.datetime) = $2;`, reqMonth, reqYear)
+	if err != nil {
+		log.Printf("%s: failed to execute the query, err: %v", env, err)
+		return nil, fmt.Errorf("%s: failed to execute the query, err: %w", env, err)
+	}
+	defer rows.Close()
+
+	var collection []any
+	for rows.Next() {
+		var eventCard EventCard
+		if err := rows.Scan(&eventCard.Id, &eventCard.Type, &eventCard.Address, &eventCard.DateTime); err != nil {
+			log.Printf("%s: failed to get the event, err: %v", env, err)
+			return nil, fmt.Errorf("%s: failed to get the event, err: %w", env, err)
+		}
+		collection = append(collection, eventCard)
+	}
+
+	if err = rows.Err(); err != nil {
+		log.Printf("%s: error occured with table rows, err: %v", env, err)
+		return nil, fmt.Errorf("%s: error occured with table rows, err: %w", env, err)
+	}
+
+	return &collection, nil
+}
+
 func (e *Event) getAllByType(db *sql.DB, env string, reqType string) (*[]any, error) {
 	rows, err := db.Query(`
-	SELECT e.id, e.type_id, e.address_id, e.datetime
+	SELECT EXTRACT(MONTH FROM e.datetime)
 	FROM events e
 	JOIN pricelist p
 	ON e.type_id = p.id
@@ -115,12 +155,12 @@ func (e *Event) getAllByType(db *sql.DB, env string, reqType string) (*[]any, er
 
 	var collection []any
 	for rows.Next() {
-		var event Event
-		if err := rows.Scan(&event.Id, &event.TypeID, &event.AddressID, &event.DateTime); err != nil {
+		var month string
+		if err := rows.Scan(&month); err != nil {
 			log.Printf("%s: failed to get the event, err: %v", env, err)
 			return nil, fmt.Errorf("%s: failed to get the event, err: %w", env, err)
 		}
-		collection = append(collection, event)
+		collection = append(collection, month)
 	}
 
 	if err = rows.Err(); err != nil {
